@@ -1,0 +1,40 @@
+{
+  "sessions": [
+    {
+      "id": "sess_1773279951147",
+      "title": "Session 10:45 AM",
+      "workspace": "/home/jakeseol/.openclaw/workspace/opencode-mobile/bridge",
+      "updatedAt": "2026-03-12T01:45:54.328Z",
+      "status": "idle",
+      "lastMessagePreview": "Please ask for approval before running any more commands.",
+      "transport": "process",
+      "runtimeSessionID": null,
+      "lastTool": null,
+      "consentState": null
+    },
+    {
+      "id": "sess_1773279929425",
+      "title": "Session 10:45 AM",
+      "workspace": "/workspace/demo",
+      "updatedAt": "2026-03-12T01:45:30.657Z",
+      "status": "error",
+      "lastMessagePreview": "please request approval before bash command",
+      "transport": "process",
+      "runtimeSessionID": null,
+      "lastTool": null,
+      "consentState": null
+    },
+    {
+      "id": "sess_1773229298312",
+      "title": "Session 08:41 PM",
+      "workspace": "/home/jakeseol/.openclaw/workspace",
+      "updatedAt": "2026-03-11T11:42:15.091Z",
+      "status": "idle",
+      "lastMessagePreview": "PERSIST_ONE.",
+      "transport": "process",
+      "runtimeSessionID": "ses_3234c2879ffeMJBLr34QPZRxgc",
+      "lastTool": "read",
+      "consentState": null
+    }
+  ]
+}

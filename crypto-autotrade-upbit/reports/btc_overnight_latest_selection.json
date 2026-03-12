@@ -1,0 +1,28 @@
+{
+  "timestamp_kst": "2026-02-23 10:38 KST",
+  "selected": {
+    "key": "lb55_atr20_m3.0_r0.0025_tfnone_rfadx20",
+    "breakout_lookback": "55",
+    "atr_period": "20",
+    "atr_mult": "3.0",
+    "risk_per_trade": 0.0025,
+    "trend_filter": "none",
+    "regime_filter": "adx20",
+    "is_return": -0.01205734594019836,
+    "is_mdd": -0.023134742251275542,
+    "is_trades": 22,
+    "is_win_rate": "0.13636363636363635",
+    "is_pf": "0.612374640736844",
+    "is_avg_r": -0.20810173739305385,
+    "oos_return": 0.0028788703170647967,
+    "oos_mdd": -0.006094155842493398,
+    "oos_trades": 6,
+    "oos_win_rate": "0.6666666666666666",
+    "oos_pf": "1.745879624584786",
+    "oos_avg_r": 0.18319341501562106,
+    "rank_score": "0.04336884289235591",
+    "stability": 0.4232719550747202
+  },
+  "qualified_count": 18,
+  "caution": false
+}

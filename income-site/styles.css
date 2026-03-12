@@ -1,0 +1,83 @@
+* { box-sizing: border-box; }
+:root {
+  --bg: #0b1220;
+  --card: #111a2e;
+  --line: #26324e;
+  --text: #e5ecff;
+  --muted: #a7b5d9;
+  --accent: #60f6b0;
+  --accent-dark: #0d3b2b;
+}
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: radial-gradient(circle at top, #13203e, var(--bg));
+  color: var(--text);
+  line-height: 1.6;
+}
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.hero { padding-top: 48px; }
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  background: #1c2a4a;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+h1 { margin: 10px 0 8px; font-size: clamp(28px, 4vw, 44px); }
+.subtitle { color: var(--muted); margin: 0 0 16px; }
+.hero-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+.card {
+  background: color-mix(in oklab, var(--card) 92%, black);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.three-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+label { display: block; font-size: 14px; color: var(--muted); }
+input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #33476f;
+  background: #091127;
+  color: var(--text);
+}
+.result-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.value { font-size: 28px; font-weight: 700; margin: 4px 0 0; }
+.label { margin: 0; color: var(--muted); }
+.muted { color: var(--muted); }
+.cta, .ghost {
+  display: inline-block;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 11px 15px;
+}
+.cta { background: var(--accent); color: var(--accent-dark); }
+.ghost { border: 1px solid #3a4f7b; color: #d7e4ff; }
+.footer { color: var(--muted); padding-top: 0; }
+@media (max-width: 760px) {
+  .three-grid, .calc-grid, .result-grid { grid-template-columns: 1fr; }
+}

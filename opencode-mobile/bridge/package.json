@@ -1,0 +1,18 @@
+{
+  "name": "opencode-mobile-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "lint": "node --check src/server.js && node --check src/runtime-adapter.js && node --check src/runtime-parser.js && node --check src/stub-adapter.js && node --check src/session-store.js && node --check src/adapter-factory.js && node --check src/host-info.js",
+    "build": "node --check src/server.js && node --check src/runtime-adapter.js",
+    "test": "node --test tests/*.test.js",
+    "smoke": "node tests/smoke-client.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.3",
+    "zod": "^3.24.1"
+  }
+}

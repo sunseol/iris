@@ -1,0 +1,33 @@
+{
+  "targetUrl": "https://mobileticket.interpark.com/goods/26002204",
+  "pollIntervalMs": 15000,
+  "targetSaleDateTimeKst": "2026-02-23T20:00:00+09:00",
+  "openBrowserSecondsBefore": 1200,
+  "autoRefreshCountdown": 20,
+  "copyUrlToClipboard": false,
+  "requestTimeoutMs": 15000,
+  "stopOnAvailable": true,
+  "availability": {
+    "availableText": [
+      "예매하기",
+      "예매",
+      "buy",
+      "ticket"
+    ],
+    "unavailableText": [
+      "오픈 전",
+      "판매 예정",
+      "준비중",
+      "매진"
+    ],
+    "availableTitleText": [
+      "예매",
+      "모바일티켓"
+    ],
+    "unavailableTitleText": [
+      "오픈 전",
+      "준비중"
+    ]
+  },
+  "requestUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+}

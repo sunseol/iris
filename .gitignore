@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+build/
+dist/
+coverage/
+.tmp/
+tmp/
+.cache/
+
+# Android / native build artifacts
+**/android/.gradle/
+**/android/build/
+**/android/app/build/
+**/.cxx/
+**/build/intermediates/
+
+# Native binaries / generated artifacts
+*.so
+*.o
+*.a
+*.class
+*.dex
+*.apk
+*.aab
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

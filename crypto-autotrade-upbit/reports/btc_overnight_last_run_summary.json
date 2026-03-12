@@ -1,0 +1,15 @@
+{
+  "run_at_kst": "2026-02-23 10:08 KST",
+  "selected": {
+    "key": "lb55_atr20_m3.0_r0.0025_tfnone_rfadx20",
+    "oos_mdd": -0.006094155842493398,
+    "oos_return": 0.0028788703170647967,
+    "oos_trades": 6,
+    "risk_per_trade": 0.0025
+  },
+  "constraint": {
+    "mdd_threshold": -0.01,
+    "used_caution": false
+  },
+  "improved_loss_risk_vs_prev": null
+}

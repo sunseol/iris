@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seoul AI Workflow Kit | 1인 사업자 자동화 템플릿</title>
+  <meta name="description" content="콘텐츠 제작, 고객 응대, 운영 관리를 자동화하는 실전형 AI 템플릿 팩" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero container">
+    <p class="badge">실전형 디지털 상품</p>
+    <h1>Seoul AI Workflow Kit</h1>
+    <p class="subtitle">프리랜서/1인 사업자를 위한 <strong>즉시 사용 가능한 AI 템플릿 번들</strong></p>
+    <div class="hero-cta">
+      <a id="buyTop" class="cta" href="https://gumroad.com" target="_blank" rel="noreferrer">지금 구매하기</a>
+      <a class="ghost" href="#calculator">목표 계산해보기</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>이 키트로 해결하는 문제</h2>
+      <ul>
+        <li>콘텐츠 아이디어 고갈 → 50개 프롬프트로 즉시 생산</li>
+        <li>고객 응대 시간 과다 → 카톡/메일 템플릿 30개로 단축</li>
+        <li>운영 지표 추적 어려움 → 월간 운영 대시보드(Notion)</li>
+      </ul>
+    </section>
+
+    <section class="card three-grid">
+      <article>
+        <h3>구성품 #1</h3>
+        <p><strong>콘텐츠 자동화 프롬프트 50개</strong><br/>숏폼/블로그/뉴스레터 작성 가속</p>
+      </article>
+      <article>
+        <h3>구성품 #2</h3>
+        <p><strong>고객 응대 템플릿 30개</strong><br/>문의·견적·리마인드·후속 제안</p>
+      </article>
+      <article>
+        <h3>구성품 #3</h3>
+        <p><strong>Notion 운영 대시보드</strong><br/>리드·매출·전환율·주간 점검</p>
+      </article>
+    </section>
+
+    <section id="calculator" class="card">
+      <h2>월 목표 매출 계산기</h2>
+      <p class="muted">기본값은 <strong>월 $3,000</strong> 기준입니다.</p>
+      <div class="calc-grid">
+        <label>목표 매출(USD)
+          <input id="target" type="number" min="100" step="100" value="3000" />
+        </label>
+        <label>상품 가격(USD)
+          <input id="price" type="number" min="1" value="49" />
+        </label>
+        <label>전환율(%)
+          <input id="cr" type="number" min="0.1" step="0.1" value="2" />
+        </label>
+      </div>
+      <div class="result-grid">
+        <div>
+          <p class="label">필요 판매량 / 월</p>
+          <p id="sales" class="value">-</p>
+        </div>
+        <div>
+          <p class="label">필요 방문자 / 월</p>
+          <p id="visitors" class="value">-</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="buy">
+      <h2>구매 안내</h2>
+      <ol>
+        <li>아래 버튼 링크를 실제 판매 페이지(Gumroad/크몽)로 교체</li>
+        <li>상품 파일 업로드 후 설명/환불정책 입력</li>
+        <li>결제 테스트 1회 진행 후 공개</li>
+      </ol>
+      <a id="buyBottom" class="cta" href="https://gumroad.com" target="_blank" rel="noreferrer">결제 페이지 연결</a>
+    </section>
+  </main>
+
+  <footer class="container footer">
+    <small>© 2026 Seoul AI Workflow Kit · Built for practical launch</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+{
+  "sessions": [
+    {
+      "session": {
+        "id": "sess_1773280028011",
+        "title": "Session 10:47 AM",
+        "workspace": "/home/jakeseol/.openclaw/workspace/opencode-mobile/bridge",
+        "updatedAt": "2026-03-12T01:47:18.529Z",
+        "status": "idle",
+        "lastMessagePreview": "Hello! How can I help you today?",
+        "transport": "process",
+        "runtimeSessionID": "ses_320460e23ffe6kKpBw0VR611l9",
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": [
+        {
+          "id": "msg_user_1773280028064",
+          "role": "user",
+          "text": "Say hello in one short sentence.",
+          "createdAt": "2026-03-12T01:47:08.064Z"
+        },
+        {
+          "id": "msg_assistant_1773280028446",
+          "role": "assistant",
+          "text": "",
+          "createdAt": "2026-03-12T01:47:08.446Z",
+          "pending": true
+        },
+        {
+          "id": "msg_user_1773280030960",
+          "role": "user",
+          "text": "Would you like me to run any further commands? Please let me know what you would like to do next.",
+          "createdAt": "2026-03-12T01:47:10.960Z"
+        },
+        {
+          "id": "msg_assistant_1773280031214",
+          "role": "assistant",
+          "text": "",
+          "createdAt": "2026-03-12T01:47:11.214Z",
+          "pending": false
+        },
+        {
+          "id": "msg_assistant_1773280038176",
+          "role": "assistant",
+          "text": "Hello! How can I help you today?",
+          "createdAt": "2026-03-12T01:47:18.176Z",
+          "pending": false
+        }
+      ]
+    },
+    {
+      "session": {
+        "id": "sess_1773282297113",
+        "title": "Session 11:24 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T02:24:57.315Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-12T02:24:57.315Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773283928676",
+        "title": "Session 11:52 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T02:52:08.710Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773285305269",
+        "title": "Session 12:15 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T03:15:05.314Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773288203373",
+        "title": "Session 01:03 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T04:03:23.392Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773288203396",
+        "title": "Session 01:03 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T04:03:23.432Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773289677745",
+        "title": "Session 01:27 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T04:27:57.792Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    }
+  ]
+}

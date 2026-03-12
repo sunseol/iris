@@ -1,0 +1,10 @@
+{
+  "name": "opencode-mobile",
+  "private": true,
+  "scripts": {
+    "lint": "npm --prefix app run lint && npm --prefix bridge run lint",
+    "build": "npm --prefix app run build && npm --prefix bridge run build",
+    "test": "npm --prefix app run test && npm --prefix bridge run test",
+    "gate": "npm run lint && npm run build && npm run test"
+  }
+}
