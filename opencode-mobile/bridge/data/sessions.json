@@ -143,6 +143,36 @@
         "consentState": null
       },
       "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773312200727",
+        "title": "Session 07:43 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T10:43:20.762Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773312817733",
+        "title": "Session 07:53 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T10:53:37.766Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
     }
   ]
 }

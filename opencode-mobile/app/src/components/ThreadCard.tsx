@@ -49,15 +49,15 @@ export function ThreadCard({
       <View style={styles.indicators}>
         {approvalPending && <View style={[styles.flagRow, styles.waitingFlag]}><Ionicons name="shield-outline" size={11} color="#fcd34d" /><Text style={[styles.flag, styles.flagTextWaiting]}>APPROVAL</Text></View>}
         {!!session.lastError && <View style={[styles.flagRow, styles.errorFlag]}><Ionicons name="alert-circle-outline" size={11} color="#fca5a5" /><Text style={[styles.flag, styles.flagTextError]}>ERROR</Text></View>}
-        {active && <View style={[styles.flagRow, styles.activeFlag]}><Ionicons name="locate-outline" size={11} color={tokens.color.text} /><Text style={[styles.flag, styles.flagTextActive]}>FOCUSED</Text></View>}
+        {active && <View style={[styles.flagRow, styles.activeFlag]}><Ionicons name="locate-outline" size={11} color={tokens.color.text} /><Text style={[styles.flag, styles.flagTextActive]}>선택됨</Text></View>}
       </View>
       {!!session.lastError && <Text style={styles.errorText} numberOfLines={2}>{session.lastError}</Text>}
       {menuOpen && (
         <View style={styles.menu}>
           <Pressable onPress={() => { setMenuOpen(false); onPress(); }} style={styles.menuButton}><Ionicons name="open-outline" size={14} color={tokens.color.text} /><Text style={styles.menuButtonText}>Open</Text></Pressable>
-          <Pressable onPress={() => { setMenuOpen(false); onResume(); }} style={styles.menuButton}><Ionicons name="play-back-outline" size={14} color={tokens.color.text} /><Text style={styles.menuButtonText}>Resume</Text></Pressable>
+          <Pressable onPress={() => { setMenuOpen(false); onResume(); }} style={styles.menuButton}><Ionicons name="play-back-outline" size={14} color={tokens.color.text} /><Text style={styles.menuButtonText}>이어하기</Text></Pressable>
           <Pressable disabled={!canCancel} onPress={() => { setMenuOpen(false); if (canCancel) onCancel(); }} style={[styles.menuButton, !canCancel && styles.menuButtonDisabled]}>
-            <Ionicons name="close-circle-outline" size={14} color={!canCancel ? tokens.color.textMuted : tokens.color.text} /><Text style={[styles.menuButtonText, !canCancel && styles.menuButtonTextDisabled]}>Cancel</Text>
+            <Ionicons name="close-circle-outline" size={14} color={!canCancel ? tokens.color.textMuted : tokens.color.text} /><Text style={[styles.menuButtonText, !canCancel && styles.menuButtonTextDisabled]}>취소</Text>
           </Pressable>
         </View>
       )}

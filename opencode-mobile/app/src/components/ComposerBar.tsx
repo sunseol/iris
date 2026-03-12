@@ -27,18 +27,18 @@ export function ComposerBar({
   return (
     <View style={styles.wrap}>
       <View style={styles.topRow}>
-        <GhostButton title="Slash" icon="code-slash-outline" onPress={() => onChangeText(`${value}${value ? ' ' : ''}/`)} />
+        <GhostButton title="슬래시" icon="code-slash-outline" onPress={() => onChangeText(`${value}${value ? ' ' : ''}/`)} />
         <View style={styles.attachmentStrip}>
-          <View style={styles.inlineRow}><Ionicons name="attach-outline" size={14} color={tokens.color.textSoft} /><Text style={styles.attachmentLabel}>Context</Text></View>
-          <Text style={styles.attachmentValue} numberOfLines={1}>No context attached</Text>
+          <View style={styles.inlineRow}><Ionicons name="attach-outline" size={14} color={tokens.color.textSoft} /><Text style={styles.attachmentLabel}>컨텍스트</Text></View>
+          <Text style={styles.attachmentValue} numberOfLines={1}>첨부된 컨텍스트 없음</Text>
         </View>
         <View style={styles.modelChip}><Ionicons name="sparkles-outline" size={14} color={tokens.color.text} /><Text style={styles.modelText} numberOfLines={1}>{modelLabel}</Text></View>
       </View>
-      <AppInput value={value} onChangeText={onChangeText} multiline style={styles.input} placeholder="Describe the task for this thread..." />
+      <AppInput value={value} onChangeText={onChangeText} multiline style={styles.input} placeholder="이 스레드에서 할 작업을 적어 주세요..." />
       <View style={[styles.actionRow, compact && styles.actionRowCompact]}>
-        <View style={compact ? styles.actionFull : undefined}><SecondaryButton title="Resume" icon="play-back-outline" onPress={onResume} /></View>
-        <View style={compact ? styles.actionFull : undefined}><SecondaryButton title="Cancel" icon="close-circle-outline" onPress={onCancel} danger /></View>
-        <View style={[styles.sendWrap, compact && styles.actionFull]}><PrimaryButton title="Send" icon="arrow-up-circle-outline" onPress={onSend} disabled={disabled} /></View>
+        <View style={compact ? styles.actionFull : undefined}><SecondaryButton title="이어하기" icon="play-back-outline" onPress={onResume} /></View>
+        <View style={compact ? styles.actionFull : undefined}><SecondaryButton title="취소" icon="close-circle-outline" onPress={onCancel} danger /></View>
+        <View style={[styles.sendWrap, compact && styles.actionFull]}><PrimaryButton title="보내기" icon="arrow-up-circle-outline" onPress={onSend} disabled={disabled} /></View>
       </View>
     </View>
   );

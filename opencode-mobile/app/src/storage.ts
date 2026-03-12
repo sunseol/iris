@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { ActiveSessionIdByProject, Project } from './types';
+import type { TrustedHost } from './pairing';
 
 const ENDPOINT_KEY = 'opencode.endpoint';
 const SESSION_KEY = 'opencode.session';
@@ -7,6 +8,7 @@ const PAIRING_KEY = 'opencode.pairingCode';
 const PROJECTS_KEY = 'opencode.projects';
 const ACTIVE_PROJECT_KEY = 'opencode.activeProject';
 const ACTIVE_SESSIONS_BY_PROJECT_KEY = 'opencode.activeSessionsByProject';
+const TRUSTED_HOSTS_KEY = 'opencode.trustedHosts';
 
 const LEGACY_PROJECT_ID = 'proj_legacy_default';
 
@@ -23,7 +25,7 @@ function makeLegacyProject(endpoint?: string | null, sessionId?: string | null):
   const now = new Date().toISOString();
   return {
     id: LEGACY_PROJECT_ID,
-    name: 'Default project',
+    name: '기본 OpenCode 프로젝트',
     workspacePath: '/home/jakeseol/.openclaw/workspace',
     bridgeEndpoint: endpoint || undefined,
     defaultSessionId: sessionId || null,
@@ -47,6 +49,14 @@ export async function savePairingCode(pairingCode: string) {
 
 export async function loadPairingCode() {
   return SecureStore.getItemAsync(PAIRING_KEY);
+}
+
+export async function saveTrustedHosts(hosts: TrustedHost[]) {
+  await SecureStore.setItemAsync(TRUSTED_HOSTS_KEY, JSON.stringify(hosts));
+}
+
+export async function loadTrustedHosts() {
+  return parseJson<TrustedHost[]>(await SecureStore.getItemAsync(TRUSTED_HOSTS_KEY)) || [];
 }
 
 export async function saveProjects(projects: Project[]) {

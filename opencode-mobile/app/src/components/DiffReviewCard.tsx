@@ -28,8 +28,8 @@ export function DiffReviewCard({
       <Text style={styles.stats}>+{additions} / -{deletions}</Text>
       <Text style={styles.preview} numberOfLines={8}>{preview}</Text>
       <View style={styles.actions}>
-        <Pressable style={[styles.button, styles.reject]} onPress={onReject}><Text style={styles.buttonText}>Reject</Text></Pressable>
-        <Pressable style={[styles.button, styles.apply]} onPress={onApply}><Text style={styles.buttonText}>Apply</Text></Pressable>
+        <Pressable style={[styles.button, styles.reject]} onPress={onReject}><Text style={styles.buttonText}>거부</Text></Pressable>
+        <Pressable style={[styles.button, styles.apply]} onPress={onApply}><Text style={styles.buttonText}>적용</Text></Pressable>
       </View>
     </View>
   );

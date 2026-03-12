@@ -6,6 +6,7 @@ import { bridgeClient } from './src/rpc';
 import {
   loadEndpoint,
   loadPairingCode,
+  loadTrustedHosts,
   migrateLegacyProjectState,
   saveActiveProjectId,
   saveActiveSessionIdByProject,
@@ -13,6 +14,7 @@ import {
   savePairingCode,
   saveProjects,
   saveSessionId,
+  saveTrustedHosts,
 } from './src/storage';
 import {
   ActiveSessionIdByProject,
@@ -41,6 +43,7 @@ import {
 } from './src/sample-data';
 import { getNextOnboardingStep, getOnboardingCopy } from './src/onboarding';
 import { parsePairingPayload } from './src/qr-placeholder';
+import { buildPairedEndpoint, classifyConnectionError, toTrustedHost, validatePairingPayload, type TrustedHost } from './src/pairing';
 import { HostHealth } from './src/host-types';
 import { sampleHostHealth } from './src/sample-host';
 import { makeCorrelationId } from './src/debug';
@@ -49,13 +52,37 @@ import { ProjectsScreen } from './src/screens/ProjectsScreen';
 import { ModelsAuthScreen } from './src/screens/ModelsAuthScreen';
 import { ConnectionScreen } from './src/screens/ConnectionScreen';
 
-const DEFAULT_ENDPOINT = 'ws://192.168.0.10:7345';
-const SAMPLE_QR_PAYLOAD = '{"endpoint":"ws://192.168.0.10:7345","pairingCode":"PAIR-1234"}';
+const DEFAULT_ENDPOINT = 'ws://10.0.2.2:7345';
+const SAMPLE_QR_PAYLOAD = JSON.stringify({
+  type: 'opencode-bridge',
+  endpoint: 'wss://demo-tunnel.opencode.example',
+  label: '개발 머신',
+  createdAt: new Date().toISOString(),
+  pairingToken: 'PAIR-1234',
+  projectHint: 'opencode-mobile',
+  version: 1,
+});
 
 type Screen = 'workspace' | 'projects' | 'modelsAuth' | 'connection';
 
 function projectWorkspace(project: Project | null) {
   return project?.workspacePath || '/home/jakeseol/.openclaw/workspace';
+}
+
+function getDefaultModelId(modelCatalog: ModelConfig[]) {
+  return modelCatalog.find((model) => model.id === 'local/opencode-runtime')?.id
+    || modelCatalog.find((model) => model.providerId === 'opencode')?.id
+    || modelCatalog.find((model) => model.recommended)?.id
+    || modelCatalog[0]?.id
+    || null;
+}
+
+function getDefaultAuthProfileId(authProfiles: AuthProfile[]) {
+  return authProfiles.find((profile) => profile.providerId === 'opencode-bridge')?.id
+    || authProfiles.find((profile) => profile.authMethod === 'bridge_inherited')?.id
+    || authProfiles.find((profile) => profile.status === 'connected')?.id
+    || authProfiles[0]?.id
+    || null;
 }
 
 export default function App() {
@@ -72,6 +99,7 @@ export default function App() {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [mode, setMode] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
   const [hostHealth, setHostHealth] = useState<HostHealth>(sampleHostHealth);
+  const [trustedHosts, setTrustedHosts] = useState<TrustedHost[]>([]);
   const [projects, setProjects] = useState<Project[]>(sampleProjects);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(sampleProjects[0]?.id ?? null);
   const [activeSessionIdByProject, setActiveSessionMap] = useState<ActiveSessionIdByProject>(sampleActiveSessionIdByProject);
@@ -86,7 +114,7 @@ export default function App() {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [recentEvents, setRecentEvents] = useState<string[]>([]);
-  const [info, setInfo] = useState<string>('Connect to a bridge or use the stub-compatible flow while runtime integration is being tuned.');
+  const [info, setInfo] = useState<string>('브리지를 연결하거나, 런타임 연동이 정리될 때까지 기본 흐름으로 테스트할 수 있습니다.');
 
   const activeProject = useMemo(() => projects.find((project) => project.id === activeProjectId) ?? null, [projects, activeProjectId]);
   const currentProjectSessions = useMemo(
@@ -117,7 +145,7 @@ export default function App() {
       const sessionMessages = messagesBySessionId[session.id] || [];
       const messageCount = sessionMessages.length;
       const turnCount = Math.ceil(messageCount / 2);
-      const lastActivityLabel = sessionMessages[messageCount - 1]?.createdAt ? formatTime(sessionMessages[messageCount - 1]?.createdAt) : 'No activity yet';
+      const lastActivityLabel = sessionMessages[messageCount - 1]?.createdAt ? formatTime(sessionMessages[messageCount - 1]?.createdAt) : '아직 활동 없음';
       const changedFilesCount = session.lastTool === 'edit' ? 1 : /\.[a-z0-9]+/i.test(session.lastMessagePreview || '') ? 1 : 0;
       return [session.id, { messageCount, turnCount, lastActivityLabel, changedFilesCount }];
     }),
@@ -135,15 +163,17 @@ export default function App() {
   );
   const onboardingStep = getNextOnboardingStep({ endpoint, pairingCode, activeSessionId });
   const onboardingCopy = getOnboardingCopy(onboardingStep);
+  const defaultModelId = useMemo(() => getDefaultModelId(modelCatalog), [modelCatalog]);
+  const defaultAuthProfileId = useMemo(() => getDefaultAuthProfileId(authProfiles), [authProfiles]);
   const diagnostics = useMemo(() => ({
-    activeProjectName: activeProject?.name || 'None',
-    activeSessionId: resolvedActiveSessionId || 'None',
+    activeProjectName: activeProject?.name || '없음',
+    activeSessionId: resolvedActiveSessionId || '없음',
     endpoint,
     connectionState: mode,
-    activeModel: activeModel?.label || 'Unassigned',
+    activeModel: activeModel?.label || '미지정',
     runtimeStatus: activeSession?.status || 'idle',
-    lastError: error || 'None',
-    approvalPending: activeApprovals.length ? 'yes' : 'no',
+    lastError: error || '없음',
+    approvalPending: activeApprovals.length ? '예' : '아니오',
   }), [activeProject, resolvedActiveSessionId, endpoint, mode, activeModel, activeSession, error, activeApprovals]);
 
   useEffect(() => {
@@ -151,6 +181,7 @@ export default function App() {
       if (!autoTestEnabled && saved) setEndpoint(saved);
     });
     loadPairingCode().then((saved) => saved && setPairingCode(saved));
+    loadTrustedHosts().then(setTrustedHosts);
     migrateLegacyProjectState().then(({ projects: savedProjects, activeProjectId: savedActiveProjectId, activeSessionIdByProject: savedSessionMap }) => {
       if (savedProjects.length) setProjects(savedProjects);
       if (savedActiveProjectId) setActiveProjectId(savedActiveProjectId);
@@ -241,14 +272,14 @@ export default function App() {
           const activeApprovalCount = (approvalsBySessionId[resolvedActiveSessionId] || []).length;
           patchSession(resolvedActiveSessionId, { status: deriveSessionStatus({ hasPendingApproval: activeApprovalCount > 0, connectionMode: 'connected' }) });
         }
-        setInfo('Bridge connected. You can create a session or resume recent work.');
+        setInfo('브리지에 연결되었습니다. 세션을 만들거나 최근 작업을 이어서 진행할 수 있습니다.');
         break;
       }
       case 'connection.closed': {
         setMode('disconnected');
         pushRecentEvent('connection.closed');
-        if (resolvedActiveSessionId) patchSession(resolvedActiveSessionId, { status: deriveSessionStatus({ connectionMode: 'disconnected' }), lastError: 'Bridge disconnected' });
-        setInfo('Bridge disconnected. Retry the connection or restart the bridge.');
+        if (resolvedActiveSessionId) patchSession(resolvedActiveSessionId, { status: deriveSessionStatus({ connectionMode: 'disconnected' }), lastError: '브리지 연결 끊김' });
+        setInfo('브리지 연결이 끊어졌습니다. 다시 연결하거나 브리지를 재시작하세요.');
         break;
       }
       case 'session.updated': {
@@ -356,13 +387,17 @@ export default function App() {
     }
   }
 
-  async function connect() {
+  async function connect(targetEndpoint?: string) {
+    const endpointToUse = targetEndpoint || endpoint;
     try {
       setError(null);
       setMode('connecting');
-      setInfo('Connecting to bridge…');
-      await bridgeClient.connect(endpoint);
-      await saveEndpoint(endpoint);
+      setInfo(`브리지에 연결하는 중… (${endpointToUse})`);
+      await bridgeClient.connect(endpointToUse);
+      if (endpointToUse !== endpoint) {
+        setEndpoint(endpointToUse);
+      }
+      await saveEndpoint(endpointToUse);
       const result = await bridgeClient.listSessions(activeProjectId ? { projectId: activeProjectId } : undefined);
       const nextSessions = result.sessions.length
         ? result.sessions.map((session) => ({ ...session, projectId: session.projectId || activeProjectId || activeProject?.id || 'proj_demo' }))
@@ -382,14 +417,23 @@ export default function App() {
       }
     } catch (err) {
       setMode('disconnected');
-      setError(err instanceof Error ? err.message : 'connection failed');
-      setInfo('Bridge connection failed. You can still inspect the product shell and keep building the UX.');
+      const rawMessage = err instanceof Error ? err.message : 'connection failed';
+      const classified = classifyConnectionError(rawMessage);
+      const errorMap: Record<string, string> = {
+        'expired QR': '만료된 QR 또는 페어링 토큰입니다.',
+        'invalid payload': '잘못된 연결 정보입니다.',
+        'tunnel unreachable': '터널 또는 브리지에 도달할 수 없습니다.',
+        'bridge offline': '브리지가 오프라인이거나 응답하지 않습니다.',
+        'auth/token mismatch': '페어링 토큰이 맞지 않거나 신뢰되지 않은 호스트입니다.',
+      };
+      setError(errorMap[classified] || rawMessage);
+      setInfo('브리지 연결에 실패했습니다. 연결 정보를 확인한 뒤 다시 시도하세요.');
     }
   }
 
   async function savePairing() {
     await savePairingCode(pairingCode);
-    setInfo('Pairing code saved locally. QR scanning can hook into this field next.');
+    setInfo('페어링 코드가 저장되었습니다. 이제 QR 스캔과 연결해서 사용할 수 있습니다.');
   }
 
   async function createProject(input: { name: string; workspacePath: string }) {
@@ -399,8 +443,8 @@ export default function App() {
       name: input.name,
       workspacePath: input.workspacePath,
       bridgeEndpoint: endpoint,
-      defaultModelId: activeProject?.defaultModelId || activeModel?.id || null,
-      authProfileId: activeProject?.authProfileId || activeAuthProfile?.id || null,
+      defaultModelId: activeProject?.defaultModelId || activeModel?.id || defaultModelId,
+      authProfileId: activeProject?.authProfileId || activeAuthProfile?.id || defaultAuthProfileId,
       defaultSessionId: null,
       createdAt: now,
       updatedAt: now,
@@ -412,7 +456,7 @@ export default function App() {
     setActiveProjectId(nextProject.id);
     setActiveSessionMap(nextSessionMap);
     await persistProjectState(nextProjects, nextProject.id, nextSessionMap);
-    setInfo(`Created project ${nextProject.name}.`);
+    setInfo(`프로젝트 ${nextProject.name}을(를) 만들었습니다.`);
     setScreen('workspace');
   }
 
@@ -423,7 +467,7 @@ export default function App() {
     ));
     setProjects(nextProjects);
     await persistProjectState(nextProjects, projectId, activeSessionIdByProject);
-    setInfo(`Switched to ${nextProjects.find((project) => project.id === projectId)?.name || 'project'}.`);
+    setInfo(`${nextProjects.find((project) => project.id === projectId)?.name || '프로젝트'}로 전환했습니다.`);
     setScreen('workspace');
   }
 
@@ -434,7 +478,7 @@ export default function App() {
     ));
     setProjects(nextProjects);
     await persistProjectState(nextProjects, activeProjectId, activeSessionIdByProject);
-    setInfo(`Model set to ${modelCatalog.find((model) => model.id === modelId)?.label || modelId}.`);
+    setInfo(`실행 모델을 ${modelCatalog.find((model) => model.id === modelId)?.label || modelId}(으)로 설정했습니다.`);
   }
 
   async function selectAuthProfile(authProfileId: string) {
@@ -444,7 +488,7 @@ export default function App() {
     ));
     setProjects(nextProjects);
     await persistProjectState(nextProjects, activeProjectId, activeSessionIdByProject);
-    setInfo(`Auth profile switched.`);
+    setInfo('인증 프로필을 변경했습니다.');
   }
 
   function toggleAuthStatus(authProfileId: string) {
@@ -453,24 +497,46 @@ export default function App() {
         ? { ...profile, status: profile.status === 'connected' ? 'disconnected' : 'connected', lastValidatedAt: new Date().toISOString() }
         : profile
     )));
-    setInfo('Auth profile state updated.');
+    setInfo('인증 프로필 상태를 업데이트했습니다.');
   }
 
   async function applyScannedPayload(raw: string, source: 'camera' | 'simulation') {
     const parsed = parsePairingPayload(raw);
-    if (!parsed.endpoint && !parsed.pairingCode) {
-      setError('invalid QR payload: expected endpoint and/or pairingCode');
-      setScannerHint('Unsupported QR format. Expected JSON like {"endpoint":"ws://host:7345","pairingCode":"PAIR-1234"}.');
+    const validation = validatePairingPayload(parsed);
+    if (!validation.ok) {
+      const errorMap: Record<string, string> = {
+        'invalid payload': '잘못된 QR입니다.',
+        'invalid version': '지원하지 않는 QR 버전입니다.',
+        'expired QR': '만료된 QR입니다.',
+        'invalid endpoint': 'endpoint 형식이 잘못되었습니다.',
+        'auth/token mismatch': '페어링 토큰이 맞지 않습니다.',
+      };
+      setError(errorMap[validation.reason] || 'QR 검증에 실패했습니다.');
+      setScannerHint('유효한 OpenCode bridge QR인지 확인하세요.');
       return;
     }
     setError(null);
     setScannerHint(null);
-    if (parsed.endpoint) setEndpoint(parsed.endpoint);
+    const pairedEndpoint = buildPairedEndpoint(parsed) || validation.normalizedEndpoint;
+    setEndpoint(validation.normalizedEndpoint);
+    await saveEndpoint(validation.normalizedEndpoint);
     if (parsed.pairingCode) {
       setPairingCode(parsed.pairingCode);
       await savePairingCode(parsed.pairingCode);
     }
-    setInfo(source === 'camera' ? 'QR import applied from camera scan.' : 'Simulated QR import applied.');
+    const trustedHost = toTrustedHost(parsed);
+    if (trustedHost) {
+      const nextTrustedHosts = [trustedHost, ...trustedHosts.filter((item) => item.hostId !== trustedHost.hostId)].slice(0, 8);
+      setTrustedHosts(nextTrustedHosts);
+      await saveTrustedHosts(nextTrustedHosts);
+    }
+    const sourceLabel = source === 'camera' ? 'QR 스캔' : 'QR 시뮬레이션';
+    const hostLabel = parsed.label ? ` (${parsed.label})` : '';
+    setInfo(`${sourceLabel}으로 브리지 정보를 등록했습니다${hostLabel}. 바로 연결을 시도합니다.`);
+    setScreen('connection');
+    setTimeout(() => {
+      connect(pairedEndpoint);
+    }, 150);
   }
 
   async function simulateQrScan() {
@@ -480,12 +546,12 @@ export default function App() {
   async function openQrScanner() {
     const result = cameraPermission?.granted ? cameraPermission : await requestCameraPermission();
     if (!result?.granted) {
-      setError('camera permission is required for QR scanning');
-      setScannerHint('Open system settings and allow camera access to scan pairing QR codes.');
+      setError('QR 스캔을 위해 카메라 권한이 필요합니다.');
+      setScannerHint('시스템 설정에서 카메라 권한을 허용한 뒤 다시 시도하세요.');
       return;
     }
     setError(null);
-    setScannerHint('Point the camera at a QR code containing endpoint and pairingCode.');
+    setScannerHint('endpoint와 pairingCode가 들어 있는 QR 코드를 카메라로 비춰 주세요.');
     setScannerOpen(true);
   }
 
@@ -518,7 +584,7 @@ export default function App() {
       await saveSessionId(nextSession.id, projectId);
       await bridgeClient.log({ event: 'session.create.success', correlationId, projectId, createdSessionId: nextSession.id });
       pushRecentEvent(`session.create: ${nextSession.id}`);
-      setInfo('New session created. Send a prompt to start the task.');
+      setInfo('새 세션을 만들었습니다. 프롬프트를 보내 작업을 시작하세요.');
       setScreen('workspace');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'failed to create session');
@@ -548,7 +614,7 @@ export default function App() {
       setActiveSessionMap(nextSessionMap);
       await saveSessionId(session.id, projectId);
       pushRecentEvent(`session.resume: ${session.id}`);
-      setInfo(`Resumed ${session.title}.`);
+      setInfo(`${session.title} 세션을 다시 이어서 열었습니다.`);
       setScreen('workspace');
     } catch (err) {
       const nextSessionMap = { ...activeSessionIdByProject, [projectId]: sessionId };
@@ -574,7 +640,7 @@ export default function App() {
       await bridgeClient.sendMessage({ projectId, sessionId, text, correlationId });
       pushRecentEvent(`message.send: ${sessionId}`);
       await bridgeClient.log({ event: 'message.send.success', correlationId, projectId, activeSessionId: sessionId, text });
-      setInfo('Prompt sent. Waiting for runtime output…');
+      setInfo('메시지를 보냈습니다. 런타임 응답을 기다리는 중입니다…');
     } catch (err) {
       await bridgeClient.log({ event: 'message.send.failure', correlationId, projectId, activeSessionId: sessionId, error: err instanceof Error ? err.message : 'failed to send message' });
       setError(err instanceof Error ? err.message : 'failed to send message');
@@ -584,7 +650,7 @@ export default function App() {
   async function cancelTask() {
     if (!resolvedActiveSessionId) return;
     try {
-      patchSession(resolvedActiveSessionId, { status: deriveSessionStatus({ eventStatus: 'cancelled' }), lastError: null, lastMessagePreview: 'Task cancelled' });
+      patchSession(resolvedActiveSessionId, { status: deriveSessionStatus({ eventStatus: 'cancelled' }), lastError: null, lastMessagePreview: '작업이 취소되었습니다' });
       setTaskStatusBySessionId((prev) => ({
         ...prev,
         [resolvedActiveSessionId]: {
@@ -592,12 +658,12 @@ export default function App() {
           sessionId: resolvedActiveSessionId,
           projectId: activeProjectId || undefined,
           status: 'cancelled',
-          state: { ...(prev[resolvedActiveSessionId]?.state || {}), title: 'Task cancelled', output: 'Cancellation requested from mobile client.' },
+          state: { ...(prev[resolvedActiveSessionId]?.state || {}), title: '작업 취소됨', output: '모바일 클라이언트에서 취소를 요청했습니다.' },
         },
       }));
       await bridgeClient.request('task.cancel', { projectId: activeProjectId || undefined, sessionId: resolvedActiveSessionId });
       pushRecentEvent(`task.cancel: ${resolvedActiveSessionId}`);
-      setInfo('Cancel requested.');
+      setInfo('취소를 요청했습니다.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'failed to cancel task');
       patchSession(resolvedActiveSessionId, { status: 'error', lastError: err instanceof Error ? err.message : 'failed to cancel task' });
@@ -615,12 +681,12 @@ export default function App() {
         patchSession(resolvedActiveSessionId, {
           status: approved ? deriveSessionStatus({ eventStatus: 'idle' }) : deriveSessionStatus({ explicitError: true }),
           consentState: { approved, approvalId, updatedAt: new Date().toISOString() },
-          lastError: approved ? null : 'Approval denied',
-          lastMessagePreview: approved ? 'Approval granted' : 'Approval denied',
+          lastError: approved ? null : '승인이 거부되었습니다',
+          lastMessagePreview: approved ? '승인되었습니다' : '승인이 거부되었습니다',
         });
       }
       pushRecentEvent(`approval.respond: ${approved ? 'approved' : 'denied'}`);
-      setInfo(approved ? 'Approval granted.' : 'Approval denied.');
+      setInfo(approved ? '승인했습니다.' : '거부했습니다.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'failed to resolve approval');
     }
@@ -672,16 +738,16 @@ export default function App() {
       <View style={styles.container}>
         <View style={styles.topBar}>
           <View style={styles.topBarCopy}>
-            <Text style={styles.title}>OpenCode Mobile</Text>
-            <Text style={styles.subtitle}>{screen === 'workspace' ? 'Project-scoped session console' : screen === 'projects' ? 'Projects' : screen === 'modelsAuth' ? 'Models & auth' : 'Connection'}</Text>
+            <Text style={styles.title}>오픈코드 모바일</Text>
+            <Text style={styles.subtitle}>{screen === 'workspace' ? '프로젝트별 세션 작업 화면' : screen === 'projects' ? '프로젝트' : screen === 'modelsAuth' ? '모델 및 인증' : '연결'}</Text>
           </View>
         </View>
 
         <View style={styles.primaryNavGrid}>
-          <View style={styles.primaryNavCell}><GhostButton title="Work" icon="grid-outline" onPress={() => setScreen('workspace')} active={screen === 'workspace'} /></View>
-          <View style={styles.primaryNavCell}><GhostButton title="Projects" icon="folder-open-outline" onPress={() => setScreen('projects')} active={screen === 'projects'} /></View>
-          <View style={styles.primaryNavCell}><GhostButton title="Model" icon="sparkles-outline" onPress={() => setScreen('modelsAuth')} active={screen === 'modelsAuth'} /></View>
-          <View style={styles.primaryNavCell}><GhostButton title="Conn" icon="git-network-outline" onPress={() => setScreen('connection')} active={screen === 'connection'} /></View>
+          <View style={styles.primaryNavCell}><GhostButton title="작업" icon="grid-outline" onPress={() => setScreen('workspace')} active={screen === 'workspace'} /></View>
+          <View style={styles.primaryNavCell}><GhostButton title="프로젝트" icon="folder-open-outline" onPress={() => setScreen('projects')} active={screen === 'projects'} /></View>
+          <View style={styles.primaryNavCell}><GhostButton title="모델" icon="sparkles-outline" onPress={() => setScreen('modelsAuth')} active={screen === 'modelsAuth'} /></View>
+          <View style={styles.primaryNavCell}><GhostButton title="연결" icon="git-network-outline" onPress={() => setScreen('connection')} active={screen === 'connection'} /></View>
         </View>
 
         {screen === 'workspace' ? (
@@ -724,8 +790,8 @@ export default function App() {
             project={activeProject}
             authProfiles={authProfiles}
             modelCatalog={modelCatalog}
-            activeModelId={activeProject?.defaultModelId || activeModel?.id || null}
-            activeAuthProfileId={activeProject?.authProfileId || activeAuthProfile?.id || null}
+            activeModelId={activeProject?.defaultModelId || activeModel?.id || defaultModelId}
+            activeAuthProfileId={activeProject?.authProfileId || activeAuthProfile?.id || defaultAuthProfileId}
             onSelectModel={selectModel}
             onSelectAuthProfile={selectAuthProfile}
             onToggleAuthStatus={toggleAuthStatus}
@@ -752,6 +818,21 @@ export default function App() {
             onDismissScanner={() => { setScannerOpen(false); setScannerHint(null); }}
             diagnostics={diagnostics}
             recentEvents={recentEvents}
+            trustedHosts={trustedHosts}
+            onReconnectTrustedHost={(hostId) => {
+              const selected = trustedHosts.find((host) => host.hostId === hostId);
+              if (!selected) return;
+              const pairedEndpoint = buildPairedEndpoint({
+                type: 'opencode-bridge',
+                endpoint: selected.endpoint,
+                hostId: selected.hostId,
+                label: selected.label,
+                pairingToken: selected.pairingToken,
+                expiresAt: selected.expiresAt,
+                version: selected.version,
+              }) || selected.endpoint;
+              connect(pairedEndpoint);
+            }}
             onBack={() => setScreen('workspace')}
           />
         )}

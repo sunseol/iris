@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createAdapter } from './adapter-factory.js';
 import { getHostInfo } from './host-info.js';
 import { writeDiagnostic } from './diagnostic-log.js';
+import { readPairingStore, validatePairingRecord } from './pairing-store.js';
 
 const requestSchema = z.object({
   jsonrpc: z.literal('2.0'),
@@ -51,7 +52,21 @@ const runtimeHandlers = {
   },
 };
 
-wss.on('connection', (socket) => {
+wss.on('connection', async (socket, req) => {
+  const requestUrl = new URL(req.url || '/', `ws://127.0.0.1:${port}`);
+  const pairingCandidate = {
+    pairingToken: requestUrl.searchParams.get('pairingToken') || undefined,
+    expiresAt: requestUrl.searchParams.get('expiresAt') || undefined,
+    hostId: requestUrl.searchParams.get('hostId') || undefined,
+    version: requestUrl.searchParams.get('version') || undefined,
+  };
+  const pairingStore = await readPairingStore();
+  const validation = validatePairingRecord(pairingStore, pairingCandidate);
+  if (!validation.ok) {
+    writeDiagnostic({ side: 'bridge', event: 'ws.connection.rejected', reason: validation.reason });
+    socket.close(4001, validation.reason || 'pairing rejected');
+    return;
+  }
   writeDiagnostic({ side: 'bridge', event: 'ws.connection' });
   send(socket, {
     jsonrpc: '2.0',

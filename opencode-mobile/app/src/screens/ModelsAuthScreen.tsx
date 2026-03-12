@@ -30,17 +30,17 @@ export function ModelsAuthScreen({
       <SectionCard>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Models & Auth</Text>
-            <Text style={styles.subtitle}>Control the provider identity and model used by the active project.</Text>
+            <Text style={styles.title}>모델 및 제공자 인증</Text>
+            <Text style={styles.subtitle}>OpenCode 프로젝트가 사용할 제공자 인증, 실행 모델, 브리지 연동 대상을 관리합니다.</Text>
           </View>
-          <SecondaryButton title="Back" onPress={onBack} />
+          <SecondaryButton title="뒤로" onPress={onBack} />
         </View>
-        <Text style={styles.context}>Project: {project?.name || 'No project selected'}</Text>
-        <Text style={styles.help}>외부 테스터는 여기서 현재 project에 연결된 모델과 인증 상태를 확인하세요. approval required 경로는 현재 환경에 따라 제한될 수 있으므로, 먼저 연결 상태와 모델 선택이 맞는지 확인하는 것이 중요합니다.</Text>
+        <Text style={styles.context}>프로젝트: {project?.name || '선택된 프로젝트 없음'}</Text>
+        <Text style={styles.help}>이 화면은 OpenCode 워크스페이스가 사용할 제공자와 인증 상태를 관리하는 곳입니다. OpenAI 전용 설정이 아니라, 프로젝트별로 어떤 모델/제공자를 연결할지 고르는 관리 화면입니다.</Text>
       </SectionCard>
 
       <SectionCard>
-        <Text style={styles.sectionTitle}>Provider auth</Text>
+        <Text style={styles.sectionTitle}>제공자 / 브리지 인증</Text>
         {authProfiles.map((profile) => {
           const active = profile.id === activeAuthProfileId;
           return (
@@ -48,14 +48,14 @@ export function ModelsAuthScreen({
               <View style={styles.rowBetween}>
                 <View style={styles.flexCopy}>
                   <Text style={styles.cardTitle}>{profile.label}</Text>
-                  <Text style={styles.meta}>{profile.providerId} · {profile.authMethod || 'unknown'}</Text>
-                  <Text style={styles.meta}>Status: {profile.status}</Text>
+                  <Text style={styles.meta}>제공자: {profile.providerId} · 방식: {profile.authMethod || '알 수 없음'}</Text>
+                  <Text style={styles.meta}>상태: {profile.status}</Text>
                 </View>
-                <Text style={styles.badge}>{active ? 'Active' : 'Available'}</Text>
+                <Text style={styles.badge}>{active ? '사용 중' : '사용 가능'}</Text>
               </View>
               <View style={styles.actions}>
-                <SecondaryButton title={active ? 'Selected' : 'Use profile'} onPress={() => onSelectAuthProfile(profile.id)} />
-                <SecondaryButton title={profile.status === 'connected' ? 'Logout' : 'Login'} onPress={() => onToggleAuthStatus(profile.id)} />
+                <SecondaryButton title={active ? '선택됨' : '이 프로필 사용'} onPress={() => onSelectAuthProfile(profile.id)} />
+                <SecondaryButton title={profile.status === 'connected' ? '로그아웃' : '로그인'} onPress={() => onToggleAuthStatus(profile.id)} />
               </View>
             </View>
           );
@@ -63,7 +63,7 @@ export function ModelsAuthScreen({
       </SectionCard>
 
       <SectionCard>
-        <Text style={styles.sectionTitle}>Model selection</Text>
+        <Text style={styles.sectionTitle}>실행 모델 선택</Text>
         {modelCatalog.map((model) => {
           const active = model.id === activeModelId;
           return (
@@ -72,10 +72,10 @@ export function ModelsAuthScreen({
                 <View style={styles.rowBetween}>
                   <View style={styles.flexCopy}>
                     <Text style={styles.cardTitle}>{model.label}</Text>
-                    <Text style={styles.meta}>{model.providerId}</Text>
-                    <Text style={styles.meta}>{model.available ? 'Available' : 'Unavailable'}{model.recommended ? ' · Recommended' : ''}</Text>
+                    <Text style={styles.meta}>제공자: {model.providerId}</Text>
+                    <Text style={styles.meta}>{model.available ? '사용 가능' : '사용 불가'}{model.recommended ? ' · 추천' : ''}</Text>
                   </View>
-                  <Text style={styles.badge}>{active ? 'Active' : 'Select'}</Text>
+                  <Text style={styles.badge}>{active ? '사용 중' : '선택'}</Text>
                 </View>
               </View>
             </TouchableOpacity>

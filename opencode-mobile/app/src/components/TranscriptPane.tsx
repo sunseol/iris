@@ -8,19 +8,19 @@ export function TranscriptPane({ messages, loading }: { messages: ChatMessage[];
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Thread transcript</Text>
-        <Text style={styles.subtitle}>Execution-facing prompt and output pane</Text>
+        <Text style={styles.title}>스레드 대화</Text>
+        <Text style={styles.subtitle}>실행 프롬프트와 응답을 확인하는 영역</Text>
       </View>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {loading ? (
           <View style={styles.emptyWrap}>
-            <Text style={styles.emptyTitle}>Loading thread state</Text>
-            <Text style={styles.emptyText}>Hydrating transcript, runtime logs, and review artifacts...</Text>
+            <Text style={styles.emptyTitle}>스레드 상태 불러오는 중</Text>
+            <Text style={styles.emptyText}>대화, 런타임 로그, 검토 정보를 불러오고 있습니다...</Text>
           </View>
         ) : !messages.length ? (
           <View style={styles.emptyWrap}>
-            <Text style={styles.emptyTitle}>Empty thread transcript</Text>
-            <Text style={styles.emptyText}>Send a task prompt to start the active thread.</Text>
+            <Text style={styles.emptyTitle}>비어 있는 스레드</Text>
+            <Text style={styles.emptyText}>작업 프롬프트를 보내 현재 스레드를 시작하세요.</Text>
           </View>
         ) : (
           messages.map((message) => (

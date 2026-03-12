@@ -8,13 +8,13 @@ type RailState = 'ready' | 'loading' | 'disconnected';
 type FilterKey = 'all' | 'active' | 'running' | 'waiting' | 'errors' | 'cancelled' | 'idle';
 
 const FILTERS: Array<{ key: FilterKey; label: string }> = [
-  { key: 'all', label: 'All' },
-  { key: 'active', label: 'Active' },
-  { key: 'running', label: 'Running' },
-  { key: 'waiting', label: 'Waiting' },
-  { key: 'errors', label: 'Errors' },
-  { key: 'cancelled', label: 'Cancelled' },
-  { key: 'idle', label: 'Idle' },
+  { key: 'all', label: '전체' },
+  { key: 'active', label: '활성' },
+  { key: 'running', label: '실행 중' },
+  { key: 'waiting', label: '대기' },
+  { key: 'errors', label: '오류' },
+  { key: 'cancelled', label: '취소됨' },
+  { key: 'idle', label: '유휴' },
 ];
 
 function priorityFor(session: ProjectSession, activeSessionId: string | null) {
@@ -41,13 +41,13 @@ function matchesFilter(filter: FilterKey, session: ProjectSession, activeSession
 
 function emptyCopy(filter: FilterKey) {
   switch (filter) {
-    case 'active': return 'No active thread selected in this project.';
-    case 'running': return 'No running threads in this project.';
-    case 'waiting': return 'No waiting approval threads in this project.';
-    case 'errors': return 'No error threads in this project.';
-    case 'cancelled': return 'No cancelled threads in this project.';
-    case 'idle': return 'No idle threads in this project.';
-    default: return 'This project has no threads yet. Start a new task to create the first isolated run.';
+    case 'active': return '이 프로젝트에서 선택된 활성 스레드가 없습니다.';
+    case 'running': return '이 프로젝트에서 실행 중인 스레드가 없습니다.';
+    case 'waiting': return '이 프로젝트에서 승인 대기 중인 스레드가 없습니다.';
+    case 'errors': return '이 프로젝트에서 오류 상태 스레드가 없습니다.';
+    case 'cancelled': return '이 프로젝트에서 취소된 스레드가 없습니다.';
+    case 'idle': return '이 프로젝트에서 유휴 상태 스레드가 없습니다.';
+    default: return '이 프로젝트에는 아직 스레드가 없습니다. 새 작업을 시작해 첫 실행을 만들어 보세요.';
   }
 }
 
@@ -142,14 +142,14 @@ export function ThreadRail({
 
           <View style={styles.header}>
             <View style={styles.headerCopy}>
-              <Text style={styles.title}>Thread navigator</Text>
-              <Text style={styles.subtitle}>{projectName || 'Current project'} · {sessions.length} thread{sessions.length === 1 ? '' : 's'}</Text>
-              <Text style={styles.projectMeta} numberOfLines={1}>{workspacePath || 'No workspace configured'}</Text>
+              <Text style={styles.title}>스레드 탐색기</Text>
+              <Text style={styles.subtitle}>{projectName || '현재 프로젝트'} · 스레드 {sessions.length}개</Text>
+              <Text style={styles.projectMeta} numberOfLines={1}>{workspacePath || '워크스페이스가 설정되지 않음'}</Text>
             </View>
             <View style={styles.headerActions}>
-              <Text style={styles.compactMeta}>{modelLabel || 'Unassigned'}</Text>
+              <Text style={styles.compactMeta}>{modelLabel || '미지정'}</Text>
               <Text style={[styles.compactMeta, connectionState === 'disconnected' && styles.compactMetaWarn]}>{connectionState}</Text>
-              <Text onPress={onCreateSession} style={styles.newButton}>+ New</Text>
+              <Text onPress={onCreateSession} style={styles.newButton}>+ 새 스레드</Text>
             </View>
           </View>
 
@@ -162,27 +162,27 @@ export function ThreadRail({
           </View>
 
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryText}>Showing {filteredSessions.length} of {sessions.length}</Text>
-            <Text style={styles.summaryText}>Filter {filter}</Text>
+            <Text style={styles.summaryText}>총 {sessions.length}개 중 {filteredSessions.length}개 표시</Text>
+            <Text style={styles.summaryText}>필터: {filter}</Text>
           </View>
 
           {state === 'loading' ? (
             <View style={styles.stateCard}>
-              <Text style={styles.stateTitle}>Loading rail</Text>
-              <Text style={styles.stateText}>Restoring project-scoped threads and active thread state...</Text>
+              <Text style={styles.stateTitle}>스레드 불러오는 중</Text>
+              <Text style={styles.stateText}>프로젝트 범위의 스레드와 현재 활성 상태를 복원하는 중입니다...</Text>
             </View>
           ) : !sessions.length || !filteredSessions.length ? (
             <View style={styles.stateCard}>
-              <Text style={styles.stateTitle}>{!sessions.length ? 'Empty project threads' : `No ${filter} threads`}</Text>
+              <Text style={styles.stateTitle}>{!sessions.length ? '프로젝트에 스레드가 없음' : `${filter} 스레드 없음`}</Text>
               <Text style={styles.stateText}>{emptyCopy(filter)}</Text>
-              {!sessions.length && <Text onPress={onCreateSession} style={styles.inlineAction}>Create first thread</Text>}
+              {!sessions.length && <Text onPress={onCreateSession} style={styles.inlineAction}>첫 스레드 만들기</Text>}
             </View>
           ) : (
             <ScrollView style={styles.scroll} contentContainerStyle={styles.list}>
               {state === 'disconnected' && (
                 <View style={[styles.stateCard, styles.disconnectedCard]}>
-                  <Text style={styles.stateTitle}>Disconnected</Text>
-                  <Text style={styles.stateText}>Thread state is preserved, but runtime is unavailable until the connection is restored.</Text>
+                  <Text style={styles.stateTitle}>연결 끊김</Text>
+                  <Text style={styles.stateText}>스레드 상태는 유지되지만, 연결이 복구될 때까지 런타임을 사용할 수 없습니다.</Text>
                 </View>
               )}
               {filteredSessions.map((session) => {

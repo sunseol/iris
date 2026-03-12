@@ -72,32 +72,32 @@ export function ProjectWorkspaceScreen({
   return (
     <View style={styles.container}>
       <TopStatusBar
-        projectName={project?.name || 'No project'}
-        workspacePath={project?.workspacePath || 'No workspace configured'}
-        executionTarget={(project as Project & { executionTarget?: string } | null)?.executionTarget || 'local'}
-        model={activeModel?.label || 'Unassigned'}
-        authState={authProfile ? `${authProfile.label} (${authProfile.status})` : 'not configured'}
+        projectName={project?.name || '프로젝트 없음'}
+        workspacePath={project?.workspacePath || '워크스페이스가 설정되지 않음'}
+        executionTarget={(project as Project & { executionTarget?: string } | null)?.executionTarget || '로컬'}
+        model={activeModel?.label || '미지정'}
+        authState={authProfile ? `${authProfile.label} (${authProfile.status})` : '설정되지 않음'}
         connectionState={connectionMode}
         threadStatus={activeSession?.status || 'idle'}
       />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actionsRow} style={styles.actionsScroller}>
         <GhostButton title={hasSessions ? `${sessions.length}` : ''} icon="albums-outline" onPress={() => setRailOpen(true)} active={railOpen} />
-        <GhostButton title="Projects" icon="folder-open-outline" onPress={onOpenProjects} />
-        <GhostButton title="Model" icon="sparkles-outline" onPress={onOpenModelsAuth} />
-        <GhostButton title="Conn" icon="git-network-outline" onPress={onOpenConnection} />
-        <GhostButton title={activityExpanded ? 'Hide' : 'Show'} icon={activityExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} onPress={onToggleActivity} active={activityExpanded} />
+        <GhostButton title="프로젝트" icon="folder-open-outline" onPress={onOpenProjects} />
+        <GhostButton title="모델" icon="sparkles-outline" onPress={onOpenModelsAuth} />
+        <GhostButton title="연결" icon="git-network-outline" onPress={onOpenConnection} />
+        <GhostButton title={activityExpanded ? '숨기기' : '보기'} icon={activityExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} onPress={onToggleActivity} active={activityExpanded} />
       </ScrollView>
 
       <SectionCard>
         <View style={[styles.activeThreadBar, compact && styles.activeThreadBarCompact]}>
           <View style={styles.activeThreadCopy}>
-            <Text style={styles.activeThreadLabel}>Active thread</Text>
-            <Text style={styles.activeThreadTitle}>{activeSession?.title || 'No active thread'}</Text>
+            <Text style={styles.activeThreadLabel}>현재 스레드</Text>
+            <Text style={styles.activeThreadTitle}>{activeSession?.title || '활성 스레드 없음'}</Text>
             <Text style={styles.activeThreadMeta} numberOfLines={1}>
-              {activeSession?.lastMessagePreview || activeSession?.workspacePath || 'Open the thread navigator to switch or create a thread.'}
+              {activeSession?.lastMessagePreview || activeSession?.workspacePath || '스레드 탐색기를 열어 스레드를 바꾸거나 새로 만드세요.'}
             </Text>
-            <Text style={styles.testingHelp}>테스트 기본 흐름: Connect → thread 생성/선택 → Send command → 응답 확인 → 필요 시 Resume/Cancel. approval required 흐름은 현재 환경에 따라 완전 검증이 제한될 수 있습니다.</Text>
+            <Text style={styles.testingHelp}>기본 흐름: OpenCode 브리지 연결 → 프로젝트 안에서 스레드 생성/선택 → 작업 보내기 → 런타임 응답 확인 → 필요 시 이어하기/취소. 승인 요청이 있으면 여기서 승인 또는 거부합니다.</Text>
           </View>
           <View style={styles.activeThreadPills}>
             <Text style={styles.threadPill}>{activeSession?.status || 'idle'}</Text>
@@ -111,7 +111,7 @@ export function ProjectWorkspaceScreen({
         onClose={() => setRailOpen(false)}
         projectName={project?.name}
         workspacePath={project?.workspacePath}
-        modelLabel={activeModel?.label || 'Unassigned'}
+        modelLabel={activeModel?.label || '미지정'}
         connectionState={connectionMode}
         sessions={sessions}
         activeSessionId={activeSession?.id || null}
@@ -145,17 +145,17 @@ export function ProjectWorkspaceScreen({
         {!!approvals.length && (
           <SectionCard>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Approval action bar</Text>
-              <Text style={styles.waitBadge}>waiting approval</Text>
+              <Text style={styles.sectionTitle}>승인 작업</Text>
+              <Text style={styles.waitBadge}>승인 대기</Text>
             </View>
-            <Text style={styles.sectionBody}>Runtime is paused until you approve or deny the requested action.</Text>
+            <Text style={styles.sectionBody}>승인하거나 거부할 때까지 런타임이 일시 정지됩니다.</Text>
             {approvals.map((approval) => (
               <View key={approval.id} style={styles.approvalCard}>
                 <Text style={styles.approvalTitle}>{approval.title}</Text>
                 <Text style={styles.approvalText}>{approval.detail}</Text>
                 <View style={styles.approvalActions}>
-                  <SecondaryButton title="Deny" onPress={() => onResolveApproval(approval.id, false)} danger />
-                  <SecondaryButton title="Approve" onPress={() => onResolveApproval(approval.id, true)} />
+                  <SecondaryButton title="거부" onPress={() => onResolveApproval(approval.id, false)} danger />
+                  <SecondaryButton title="승인" onPress={() => onResolveApproval(approval.id, true)} />
                 </View>
               </View>
             ))}
@@ -164,7 +164,7 @@ export function ProjectWorkspaceScreen({
 
         <SectionCard>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Task timeline / execution log</Text>
+            <Text style={styles.sectionTitle}>작업 타임라인 / 실행 로그</Text>
             <Text style={styles.metaMono}>{taskStatus?.status || activeSession?.status || 'idle'}</Text>
           </View>
           {taskStatus ? (
@@ -175,7 +175,7 @@ export function ProjectWorkspaceScreen({
               {!!taskStatus.state?.output && <Text style={styles.logBlock}>{taskStatus.state.output.trim()}</Text>}
             </View>
           ) : (
-            <Text style={styles.emptyCopy}>No runtime log yet. Start or resume a thread to populate execution activity.</Text>
+            <Text style={styles.emptyCopy}>아직 런타임 로그가 없습니다. 스레드를 시작하거나 다시 이어서 실행 기록을 채우세요.</Text>
           )}
         </SectionCard>
 
@@ -183,15 +183,15 @@ export function ProjectWorkspaceScreen({
           <TranscriptPane messages={messages} loading={connectionMode === 'connecting'} />
         ) : (
           <SectionCard>
-            <Text style={styles.sectionTitle}>Empty project</Text>
-            <Text style={styles.emptyCopy}>This project has no threads yet. Create a new thread to start the first isolated task run.</Text>
-            <View style={styles.inlineAction}><SecondaryButton title="Create first thread" onPress={onCreateSession} /></View>
+            <Text style={styles.sectionTitle}>빈 프로젝트</Text>
+            <Text style={styles.emptyCopy}>이 프로젝트에는 아직 스레드가 없습니다. 새 스레드를 만들어 첫 작업을 시작하세요.</Text>
+            <View style={styles.inlineAction}><SecondaryButton title="첫 스레드 만들기" onPress={onCreateSession} /></View>
           </SectionCard>
         )}
 
         <SectionCard>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Diff review</Text>
+            <Text style={styles.sectionTitle}>변경사항 검토</Text>
             <Text style={styles.metaMono}>{changedFilesCount} file{changedFilesCount === 1 ? '' : 's'}</Text>
           </View>
           {changedFilesCount > 0 ? (
@@ -205,16 +205,16 @@ export function ProjectWorkspaceScreen({
               onReject={() => onResolveApproval(approvals[0]?.id || 'diff_reject', false)}
             />
           ) : (
-            <Text style={styles.emptyCopy}>No changed files yet. Structured diff review cards will appear here when the active thread produces edits.</Text>
+            <Text style={styles.emptyCopy}>아직 변경된 파일이 없습니다. 활성 스레드가 파일을 수정하면 여기에 검토 카드가 표시됩니다.</Text>
           )}
         </SectionCard>
 
         <SectionCard>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Context attachments</Text>
-            <Text style={styles.metaMono}>0 attached</Text>
+            <Text style={styles.sectionTitle}>컨텍스트 첨부</Text>
+            <Text style={styles.metaMono}>0개 첨부됨</Text>
           </View>
-          <Text style={styles.emptyCopy}>No context attached. Add files, notes, or artifacts to guide this thread later.</Text>
+          <Text style={styles.emptyCopy}>첨부된 컨텍스트가 없습니다. 나중에 파일, 메모, 산출물을 추가해 스레드를 더 잘 안내할 수 있습니다.</Text>
         </SectionCard>
       </ScrollView>
 
@@ -225,7 +225,7 @@ export function ProjectWorkspaceScreen({
         onSend={onSend}
         onCancel={onCancelTask}
         onResume={() => activeSession?.id && onSelectSession(activeSession.id)}
-        modelLabel={activeModel?.label || 'Unassigned'}
+        modelLabel={activeModel?.label || '미지정'}
         disabled={!activeSession || !draft.trim()}
       />
       </View>
