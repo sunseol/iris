@@ -1,0 +1,37 @@
+export const tokens = {
+  color: {
+    bg: '#070b12',
+    panel: '#0f1724',
+    panelAlt: '#111c2b',
+    panelMuted: '#0b1320',
+    border: '#213043',
+    borderStrong: '#31445f',
+    text: '#ecf3ff',
+    textSoft: '#c7d3e5',
+    textMuted: '#90a0b7',
+    mono: '#b8c4d6',
+    primary: '#3f82ff',
+    primarySoft: '#16294d',
+    running: '#22c55e',
+    waiting: '#f59e0b',
+    success: '#16a34a',
+    error: '#ef4444',
+    cancelled: '#8b5cf6',
+    disconnected: '#f97316',
+    chip: '#172233',
+  },
+  space: {
+    xs: 6,
+    sm: 10,
+    md: 14,
+    lg: 18,
+  },
+  radius: {
+    sm: 10,
+    md: 14,
+    lg: 18,
+  },
+  type: {
+    mono: 'monospace' as const,
+  },
+};

@@ -1,0 +1,10 @@
+node_modules/
+**/node_modules/
+.expo/
+**/.expo/
+android/.gradle/
+**/android/.gradle/
+android/build/
+**/android/build/
+app/android/build/
+**/*.so

@@ -1,0 +1,11 @@
+{"time":"2026-03-12T01:47:08.006Z","side":"bridge","event":"ws.connection"}
+{"time":"2026-03-12T01:47:08.011Z","side":"bridge","event":"rpc.inbound","method":"session.create","requestId":"261c3f886e391","correlationId":"none","params":{"workspace":"/home/jakeseol/.openclaw/workspace/opencode-mobile/bridge"}}
+{"time":"2026-03-12T01:47:08.063Z","side":"bridge","event":"rpc.inbound","method":"message.send","requestId":"9b4ad670de9c3","correlationId":"none","params":{"sessionId":"sess_1773280028011","text":"Say hello in one short sentence."}}
+{"time":"2026-03-12T01:47:08.452Z","side":"bridge","event":"message.send.accepted","correlationId":"none","sessionId":"sess_1773280028011","text":"Say hello in one short sentence."}
+{"time":"2026-03-12T01:47:10.960Z","side":"bridge","event":"rpc.inbound","method":"message.send","requestId":"8c6a626279aa2","correlationId":"none","params":{"sessionId":"sess_1773280028011","text":"Would you like me to run any further commands? Please let me know what you would like to do next."}}
+{"time":"2026-03-12T01:47:11.222Z","side":"bridge","event":"message.send.accepted","correlationId":"none","sessionId":"sess_1773280028011","text":"Would you like me to run any further commands? Please let me know what you would like to do next."}
+{"time":"2026-03-12T01:47:13.725Z","side":"bridge","event":"rpc.inbound","method":"task.cancel","requestId":"5a43009ac77e7","correlationId":"none","params":{"sessionId":"sess_1773280028011"}}
+{"time":"2026-03-12T01:47:14.865Z","side":"bridge","event":"rpc.inbound","method":"session.resume","requestId":"61bfbd6f2d692","correlationId":"none","params":{"sessionId":"sess_1773280028011"}}
+{"time":"2026-03-12T01:47:26.039Z","side":"bridge","event":"ws.connection"}
+{"time":"2026-03-12T01:47:26.042Z","side":"bridge","event":"rpc.inbound","method":"session.list","requestId":"d8bf3f8cc2c3d","correlationId":"none","params":{}}
+{"time":"2026-03-12T01:47:26.043Z","side":"bridge","event":"rpc.inbound","method":"session.resume","requestId":"e04f755444636","correlationId":"none","params":{"sessionId":"sess_1773280028011"}}
