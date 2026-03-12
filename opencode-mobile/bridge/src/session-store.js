@@ -1,11 +1,12 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_PATH = process.env.OPENCODE_BRIDGE_STATE_PATH || new URL('../data/sessions.json', import.meta.url);
 
 function resolvePath(input) {
-  if (input instanceof URL) return input;
-  return new URL(`file://${input}`);
+  if (input instanceof URL) return fileURLToPath(input);
+  return input;
 }
 
 export class SessionStore {
@@ -24,7 +25,7 @@ export class SessionStore {
   }
 
   save(sessions) {
-    mkdirSync(dirname(this.file.pathname), { recursive: true });
+    mkdirSync(dirname(this.file), { recursive: true });
     writeFileSync(this.file, JSON.stringify({ sessions }, null, 2));
   }
 }
