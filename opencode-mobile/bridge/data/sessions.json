@@ -214,6 +214,615 @@
         "consentState": null
       },
       "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773327675664",
+        "title": "Session 12:01 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T15:01:15.703Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773327675707",
+        "title": "Session 12:01 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T15:01:15.736Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-12T15:01:15.736Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773327675738",
+        "title": "Session 12:01 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T15:01:15.760Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773358616837",
+        "title": "Session 08:36 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T23:36:56.891Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773358616917",
+        "title": "Session 08:36 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T23:36:56.953Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-12T23:36:56.953Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773358616996",
+        "title": "Session 08:36 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-12T23:36:57.027Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773364632566",
+        "title": "Session 10:17 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T01:17:12.632Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773364632639",
+        "title": "Session 10:17 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T07:08:37.954Z",
+        "status": "idle",
+        "lastMessagePreview": "Kiro입니다. 개발자를 위한 AI 어시스턴트이자 IDE로, 코드 작성부터 디버깅, 탐색, 아키텍처 상담까지 개발 전반을 도와드리는 역할을 하고 있어요.",
+        "transport": "process",
+        "runtimeSessionID": "ses_31a316088ffeMMTgviC44ikXdO",
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": [
+        {
+          "id": "msg_user_1773382041738",
+          "role": "user",
+          "text": "안녕",
+          "createdAt": "2026-03-13T06:07:21.738Z"
+        },
+        {
+          "id": "msg_assistant_1773382041740",
+          "role": "assistant",
+          "text": "안녕하세요! 무엇을 도와드릴까요?",
+          "createdAt": "2026-03-13T06:07:21.740Z",
+          "pending": false
+        },
+        {
+          "id": "msg_user_1773382074023",
+          "role": "user",
+          "text": "지금 너의 경로를 알려줘. 어디서 실행되고 있는거야?",
+          "createdAt": "2026-03-13T06:07:54.023Z"
+        },
+        {
+          "id": "msg_assistant_1773382074025",
+          "role": "assistant",
+          "text": "현재 작업 디렉토리는 `C:\\tmp`이고, Windows (`win32`) 환경에서 실행 중입니다. Git 저장소는 아닙니다.\n\n디렉토리 내용도 확인해볼까요?",
+          "createdAt": "2026-03-13T06:07:54.025Z",
+          "pending": false
+        },
+        {
+          "id": "msg_user_1773382101801",
+          "role": "user",
+          "text": "너는 누구야?",
+          "createdAt": "2026-03-13T06:08:21.801Z"
+        },
+        {
+          "id": "msg_assistant_1773382101803",
+          "role": "assistant",
+          "text": "저는 Kiro입니다. 개발자를 돕기 위해 만들어진 AI 어시스턴트이자 IDE예요. 코드 작성, 디버깅, 리팩토링, 아키텍처 설계 등 개발 관련 작업을 도와드립니다.\n\n무엇을 도와드릴까요?",
+          "createdAt": "2026-03-13T06:08:21.803Z",
+          "pending": false
+        },
+        {
+          "id": "msg_user_1773385695978",
+          "role": "user",
+          "text": "너는 지금 어떤 에이전트야?",
+          "createdAt": "2026-03-13T07:08:15.978Z"
+        },
+        {
+          "id": "msg_assistant_1773385695982",
+          "role": "assistant",
+          "text": "Kiro입니다. 개발자를 위한 AI 어시스턴트이자 IDE로, 코드 작성부터 디버깅, 탐색, 아키텍처 상담까지 개발 전반을 도와드리는 역할을 하고 있어요.",
+          "createdAt": "2026-03-13T07:08:15.982Z",
+          "pending": false
+        }
+      ]
+    },
+    {
+      "session": {
+        "id": "sess_1773366504560",
+        "title": "Session 10:48 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T01:48:24.601Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773366504635",
+        "title": "Session 10:48 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T01:48:24.668Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773369532914",
+        "title": "Session 11:38 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:38:52.990Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773369532994",
+        "title": "Session 11:38 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:38:53.032Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-13T02:38:53.032Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773369533103",
+        "title": "Session 11:38 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:38:53.139Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773369741353",
+        "title": "Session 11:42 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:42:21.447Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773369741457",
+        "title": "Session 11:42 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:42:21.492Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-13T02:42:21.492Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773369741560",
+        "title": "Session 11:42 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:42:21.594Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773370383817",
+        "title": "Session 11:53 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:53:03.862Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773370383897",
+        "title": "Session 11:53 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:53:03.952Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773370384008",
+        "title": "Session 11:53 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:53:04.061Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-13T02:53:04.061Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773370384100",
+        "title": "Session 11:53 AM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T02:53:04.140Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773376541706",
+        "title": "Session 01:35 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T04:35:41.802Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773376541854",
+        "title": "Session 01:35 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T04:35:41.887Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773376541896",
+        "title": "Session 01:35 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T04:35:41.931Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-13T04:35:41.931Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773376542057",
+        "title": "Session 01:35 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T04:35:42.095Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773376904412",
+        "title": "Session 01:41 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T04:41:44.444Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773376904473",
+        "title": "Session 01:41 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T04:41:44.509Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": {
+          "approved": true,
+          "approvalId": "approval_1",
+          "detail": "Do you approve running any further commands?",
+          "updatedAt": "2026-03-13T04:41:44.509Z"
+        }
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773376904586",
+        "title": "Session 01:41 PM",
+        "workspace": "/tmp",
+        "updatedAt": "2026-03-13T05:52:41.734Z",
+        "status": "idle",
+        "lastMessagePreview": "안녕",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": [
+        {
+          "id": "msg_user_1773381161715",
+          "role": "user",
+          "text": "안녕",
+          "createdAt": "2026-03-13T05:52:41.715Z"
+        },
+        {
+          "id": "msg_assistant_1773381161718",
+          "role": "assistant",
+          "text": "",
+          "createdAt": "2026-03-13T05:52:41.718Z",
+          "pending": true
+        }
+      ]
+    },
+    {
+      "session": {
+        "id": "sess_1773381423795",
+        "title": "Session 02:57 PM",
+        "workspace": "C:\\Users\\keduall\\iris\\opencode-mobile\\bridge",
+        "updatedAt": "2026-03-13T05:57:03.820Z",
+        "status": "idle",
+        "lastMessagePreview": "",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": []
+    },
+    {
+      "session": {
+        "id": "sess_1773381423825",
+        "title": "Session 02:57 PM",
+        "workspace": "C:\\Users\\keduall\\iris\\opencode-mobile\\bridge",
+        "updatedAt": "2026-03-13T05:57:16.899Z",
+        "status": "idle",
+        "lastMessagePreview": "bun install v1.3.8 (b64edcb4)\nDone! Checked 12 packages (no changes) [14.00ms]\n",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": [
+        {
+          "id": "msg_user_1773381423829",
+          "role": "user",
+          "text": "hello from mobile, reply with just \"hi\" in one word",
+          "createdAt": "2026-03-13T05:57:03.829Z"
+        },
+        {
+          "id": "msg_assistant_1773381423830",
+          "role": "assistant",
+          "text": "bun install v1.3.8 (b64edcb4)\nDone! Checked 12 packages (no changes) [14.00ms]\n",
+          "createdAt": "2026-03-13T05:57:03.830Z",
+          "pending": false
+        }
+      ]
+    },
+    {
+      "session": {
+        "id": "sess_1773381437907",
+        "title": "Session 02:57 PM",
+        "workspace": "C:\\Users\\keduall\\iris\\opencode-mobile\\bridge",
+        "updatedAt": "2026-03-13T05:57:26.827Z",
+        "status": "idle",
+        "lastMessagePreview": "bun install v1.3.8 (b64edcb4)\nDone! Checked 12 packages (no changes) [25.00ms]\n",
+        "transport": "process",
+        "runtimeSessionID": null,
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": [
+        {
+          "id": "msg_user_1773381437911",
+          "role": "user",
+          "text": "say ok",
+          "createdAt": "2026-03-13T05:57:17.911Z"
+        },
+        {
+          "id": "msg_assistant_1773381437912",
+          "role": "assistant",
+          "text": "bun install v1.3.8 (b64edcb4)\nDone! Checked 12 packages (no changes) [25.00ms]\n",
+          "createdAt": "2026-03-13T05:57:17.912Z",
+          "pending": false
+        }
+      ]
+    },
+    {
+      "session": {
+        "id": "sess_1773386025526",
+        "title": "Session 04:13 PM",
+        "workspace": "c://",
+        "updatedAt": "2026-03-13T07:14:47.066Z",
+        "status": "idle",
+        "lastMessagePreview": "저는 Kiro입니다. 개발자를 돕기 위해 만들어진 AI 어시스턴트이자 IDE예요.\n\n코드 작성, 디버깅, 리팩토링, 아키텍처 설계, 코드베이스 탐색 등 소프트웨어 개발 전반을 도와드릴 수 있습니다. 파일 시스템 조작",
+        "transport": "process",
+        "runtimeSessionID": "ses_319f40cd4ffetxUlxfAXmLbimS",
+        "lastTool": null,
+        "consentState": null
+      },
+      "messages": [
+        {
+          "id": "msg_user_1773386034256",
+          "role": "user",
+          "text": "너는 누구니?",
+          "createdAt": "2026-03-13T07:13:54.256Z"
+        },
+        {
+          "id": "msg_assistant_1773386034257",
+          "role": "assistant",
+          "text": "저는 Kiro입니다. 개발자를 돕기 위해 만들어진 AI 어시스턴트이자 IDE예요.\n\n코드 작성, 디버깅, 리팩토링, 아키텍처 설계, 코드베이스 탐색 등 소프트웨어 개발 전반을 도와드릴 수 있습니다. 파일 시스템 조작, 셸 명령 실행, 웹 검색, 문서 작성 같은 것도 가능하고요.\n\n뭘 도와드릴까요?",
+          "createdAt": "2026-03-13T07:13:54.257Z",
+          "pending": false
+        }
+      ]
     }
   ]
 }

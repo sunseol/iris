@@ -123,6 +123,8 @@ export class ProcessBackedOpenCodeAdapter {
       onAssistantBoundary: (sid) => this.#completeAssistantBoundary(sid, handlers),
       onRuntimeSession: (sid, runtimeSessionID) => this.#setRuntimeSessionID(sid, runtimeSessionID, handlers),
       onToolUse: (sid, toolUse) => this.#recordToolUse(sid, toolUse, handlers),
+      onThinking: (sid, thinking) => handlers.onThinking?.(sid, thinking),
+      onAgentDetected: (sid, agent) => this.#setAgent(sid, agent, handlers),
     });
 
     entry.cancelRequested = false;
@@ -145,7 +147,8 @@ export class ProcessBackedOpenCodeAdapter {
         cwd: entry.session.workspace,
         env: process.env,
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true,
+        shell: process.platform === 'win32',
+        detached: process.platform !== 'win32',
       });
     } catch (error) {
       entry.session.status = 'error';
@@ -194,7 +197,11 @@ export class ProcessBackedOpenCodeAdapter {
     if (entry.proc && !entry.proc.killed) {
       entry.cancelRequested = true;
       try {
-        process.kill(-entry.proc.pid, 'SIGTERM');
+        if (process.platform === 'win32') {
+          entry.proc.kill('SIGTERM');
+        } else {
+          process.kill(-entry.proc.pid, 'SIGTERM');
+        }
       } catch {
         try {
           entry.proc.kill('SIGTERM');
@@ -263,6 +270,17 @@ export class ProcessBackedOpenCodeAdapter {
       state: toolUse.state,
     });
     handlers.onSessionUpdated?.(entry.session);
+  }
+
+  #setAgent(sessionId, agent, handlers) {
+    const entry = this.sessions.get(sessionId);
+    if (!entry) return;
+    if (entry.session.activeAgent !== agent) {
+      entry.session.activeAgent = agent;
+      entry.session.updatedAt = now();
+      this.#persist();
+      handlers.onSessionUpdated?.(entry.session);
+    }
   }
 
   #appendAssistantText(sessionId, text, handlers) {

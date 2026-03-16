@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppInput, PrimaryButton, SecondaryButton, SectionCard } from '../components';
 import { Project } from '../types';
 import { colors } from '../theme';
@@ -24,11 +25,13 @@ export function ProjectsScreen({
     <ScrollView contentContainerStyle={styles.container}>
       <SectionCard>
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.title}>Projects</Text>
             <Text style={styles.subtitle}>Project namespace controls active sessions and workspace scope.</Text>
           </View>
-          <SecondaryButton title="Back" onPress={onBack} />
+          <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
+          </TouchableOpacity>
         </View>
       </SectionCard>
 
@@ -55,15 +58,18 @@ export function ProjectsScreen({
         {projects.map((project) => {
           const active = project.id === activeProjectId;
           return (
-            <TouchableOpacity key={project.id} activeOpacity={0.9} onPress={() => onSelectProject(project.id)}>
+            <TouchableOpacity key={project.id} activeOpacity={0.7} onPress={() => onSelectProject(project.id)}>
               <View style={[styles.projectCard, active && styles.projectCardActive]}>
                 <View style={styles.rowBetween}>
-                  <Text style={styles.projectName}>{project.name}</Text>
-                  <Text style={styles.badge}>{active ? 'Active' : 'Select'}</Text>
+                  <View style={styles.projectIconWrap}>
+                    <Ionicons name="folder-outline" size={18} color={active ? '#2563eb' : colors.textMuted} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.projectName}>{project.name}</Text>
+                    <Text style={styles.projectMeta}>{project.workspacePath}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                 </View>
-                <Text style={styles.projectMeta}>{project.workspacePath}</Text>
-                <Text style={styles.projectMeta}>Default model: {project.defaultModelId || 'Unassigned'}</Text>
-                <Text style={styles.projectMeta}>Auth profile: {project.authProfileId || 'Not configured'}</Text>
               </View>
             </TouchableOpacity>
           );
@@ -74,16 +80,17 @@ export function ProjectsScreen({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 12, paddingBottom: 24 },
+  container: { gap: 12, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
   header: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'center' },
+  backButton: { padding: 8, borderRadius: 999, backgroundColor: '#f3f4f6' },
   title: { color: colors.text, fontWeight: '700', fontSize: 22 },
   subtitle: { color: colors.textMuted, marginTop: 4, maxWidth: 420 },
   sectionTitle: { color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 10 },
   inputGap: { marginTop: 10 },
-  projectCard: { marginTop: 10, backgroundColor: colors.panelAlt, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 12 },
-  projectCardActive: { borderColor: colors.primary, backgroundColor: '#101d38' },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  projectName: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  badge: { color: colors.textSoft, backgroundColor: '#1e293b', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 12 },
-  projectMeta: { color: colors.textMuted, fontSize: 12, marginTop: 5 },
+  projectCard: { marginTop: 10, backgroundColor: '#f9fafb', borderRadius: 20, borderWidth: 1, borderColor: '#e5e7eb', padding: 14 },
+  projectCardActive: { borderColor: '#2563eb', backgroundColor: '#eff6ff' },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  projectIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e7eb', alignItems: 'center', justifyContent: 'center' },
+  projectName: { color: colors.text, fontWeight: '600', fontSize: 15 },
+  projectMeta: { color: colors.textMuted, fontSize: 12, marginTop: 3 },
 });

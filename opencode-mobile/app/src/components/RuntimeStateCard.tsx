@@ -5,13 +5,13 @@ import { TaskStatusEvent, ProjectSession } from '../types';
 import { tokens } from '../theme/tokens';
 
 function runtimeTone(status?: ProjectSession['status'] | null, connectionStatus?: 'disconnected' | 'connecting' | 'connected', error?: string | null) {
-  if (error || status === 'error') return { label: 'Error', icon: 'alert-circle-outline' as const, color: '#fca5a5', bg: '#3a1118', border: '#7f1d1d' };
-  if (status === 'disconnected' || connectionStatus === 'disconnected') return { label: 'Disconnected', icon: 'cloud-offline-outline' as const, color: '#fdba74', bg: '#31200f', border: '#9a3412' };
-  if (status === 'waiting_approval') return { label: 'Waiting approval', icon: 'time-outline' as const, color: '#fde68a', bg: '#33240f', border: '#a16207' };
-  if (status === 'cancelled') return { label: 'Cancelled', icon: 'close-circle-outline' as const, color: '#ddd6fe', bg: '#24163c', border: '#6d28d9' };
-  if (connectionStatus === 'connecting') return { label: 'Connecting', icon: 'sync-outline' as const, color: '#fde68a', bg: '#2e2610', border: '#a16207' };
-  if (status === 'running') return { label: 'Running', icon: 'play-circle-outline' as const, color: '#86efac', bg: '#0f2d1c', border: '#166534' };
-  return { label: 'Idle', icon: 'pause-circle-outline' as const, color: tokens.color.textSoft, bg: tokens.color.chip, border: tokens.color.borderStrong };
+  if (error || status === 'error') return { label: 'Error', icon: 'alert-circle-outline' as const, color: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
+  if (status === 'disconnected' || connectionStatus === 'disconnected') return { label: 'Disconnected', icon: 'cloud-offline-outline' as const, color: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
+  if (status === 'waiting_approval') return { label: 'Waiting approval', icon: 'time-outline' as const, color: '#92400e', bg: '#fffbeb', border: '#fde68a' };
+  if (status === 'cancelled') return { label: 'Cancelled', icon: 'close-circle-outline' as const, color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb' };
+  if (connectionStatus === 'connecting') return { label: 'Connecting', icon: 'sync-outline' as const, color: '#92400e', bg: '#fffbeb', border: '#fde68a' };
+  if (status === 'running') return { label: 'Running', icon: 'play-circle-outline' as const, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' };
+  return { label: 'Idle', icon: 'pause-circle-outline' as const, color: tokens.color.textMuted, bg: tokens.color.panelAlt, border: tokens.color.border };
 }
 
 export function RuntimeStateCard({
@@ -71,7 +71,7 @@ export function RuntimeStateCard({
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: tokens.color.panel, borderRadius: tokens.radius.lg, borderWidth: 1, padding: tokens.space.md },
+  card: { backgroundColor: '#ffffff', borderRadius: 20, borderWidth: 1, padding: tokens.space.md },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   copy: { flex: 1, paddingRight: 8 },
   titleRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
@@ -79,13 +79,13 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
   badge: { fontSize: 11, fontWeight: '700' },
   summary: { color: tokens.color.textMuted, fontSize: 12, marginTop: 6, fontFamily: tokens.type.mono },
-  toggle: { color: tokens.color.textSoft, backgroundColor: tokens.color.chip, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
+  toggle: { color: tokens.color.textSoft, backgroundColor: tokens.color.panelAlt, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontWeight: '500' },
   body: { marginTop: 12, gap: 6 },
   line: { color: tokens.color.textSoft, lineHeight: 18 },
   mono: { fontFamily: tokens.type.mono, color: tokens.color.mono },
-  waiting: { color: '#fde68a', backgroundColor: '#33240f', borderColor: '#a16207', borderWidth: 1, borderRadius: 12, padding: 10 },
-  cancelled: { color: '#ddd6fe', backgroundColor: '#24163c', borderColor: '#6d28d9', borderWidth: 1, borderRadius: 12, padding: 10 },
-  disconnected: { color: '#fdba74', backgroundColor: '#31200f', borderColor: '#9a3412', borderWidth: 1, borderRadius: 12, padding: 10 },
+  waiting: { color: '#92400e', backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1, borderRadius: 12, padding: 10 },
+  cancelled: { color: '#6b7280', backgroundColor: '#f9fafb', borderColor: '#e5e7eb', borderWidth: 1, borderRadius: 12, padding: 10 },
+  disconnected: { color: '#dc2626', backgroundColor: '#fef2f2', borderColor: '#fecaca', borderWidth: 1, borderRadius: 12, padding: 10 },
   output: { color: tokens.color.text, backgroundColor: tokens.color.panelAlt, borderWidth: 1, borderColor: tokens.color.border, borderRadius: 12, padding: 10, fontFamily: tokens.type.mono },
-  error: { color: '#fca5a5' },
+  error: { color: '#dc2626' },
 });

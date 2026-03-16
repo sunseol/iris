@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ApprovalRequest, AuthProfile, ChatMessage, ModelConfig, Project, ProjectSession, TaskStatusEvent } from '../types';
 import { TopStatusBar } from '../components/TopStatusBar';
 import { ThreadRail } from '../components/ThreadRail';
-import { RuntimeStateCard } from '../components/RuntimeStateCard';
 import { TranscriptPane } from '../components/TranscriptPane';
 import { ComposerBar } from '../components/ComposerBar';
-import { DiffReviewCard } from '../components/DiffReviewCard';
-import { GhostButton, SecondaryButton, SectionCard } from '../components';
 import { tokens } from '../theme/tokens';
+import { DiffReviewSheet } from '../components/DiffReviewSheet';
 
 export function ProjectWorkspaceScreen({
   project,
@@ -32,9 +31,9 @@ export function ProjectWorkspaceScreen({
   onCreateSession,
   onSelectSession,
   onOpenProjects,
-  onOpenModelsAuth,
-  onOpenConnection,
+  onOpenSettings,
   onResolveApproval,
+  activeAgent,
 }: {
   project: Project | null;
   activeSession: ProjectSession | null;
@@ -47,6 +46,7 @@ export function ProjectWorkspaceScreen({
   connectionMode: 'disconnected' | 'connecting' | 'connected';
   authProfile: AuthProfile | null;
   activeModel: ModelConfig | null;
+  activeAgent?: string | null;
   error?: string | null;
   draft: string;
   activityExpanded: boolean;
@@ -57,11 +57,11 @@ export function ProjectWorkspaceScreen({
   onCreateSession: () => void;
   onSelectSession: (sessionId: string) => void;
   onOpenProjects: () => void;
-  onOpenModelsAuth: () => void;
-  onOpenConnection: () => void;
+  onOpenSettings: () => void;
   onResolveApproval: (approvalId: string, approved: boolean) => void;
 }) {
   const [railOpen, setRailOpen] = useState(false);
+  const [diffSheetOpen, setDiffSheetOpen] = useState(false);
   const { width, height } = useWindowDimensions();
   const compact = width < 420;
   const hasSessions = sessions.length > 0;
@@ -79,32 +79,10 @@ export function ProjectWorkspaceScreen({
         authState={authProfile ? `${authProfile.label} (${authProfile.status})` : 'not configured'}
         connectionState={connectionMode}
         threadStatus={activeSession?.status || 'idle'}
+        activeAgent={activeAgent}
+        onOpenProjects={onOpenProjects}
+        onOpenSettings={onOpenSettings}
       />
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actionsRow} style={styles.actionsScroller}>
-        <GhostButton title={hasSessions ? `${sessions.length}` : ''} icon="albums-outline" onPress={() => setRailOpen(true)} active={railOpen} />
-        <GhostButton title="Projects" icon="folder-open-outline" onPress={onOpenProjects} />
-        <GhostButton title="Model" icon="sparkles-outline" onPress={onOpenModelsAuth} />
-        <GhostButton title="Conn" icon="git-network-outline" onPress={onOpenConnection} />
-        <GhostButton title={activityExpanded ? 'Hide' : 'Show'} icon={activityExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} onPress={onToggleActivity} active={activityExpanded} />
-      </ScrollView>
-
-      <SectionCard>
-        <View style={[styles.activeThreadBar, compact && styles.activeThreadBarCompact]}>
-          <View style={styles.activeThreadCopy}>
-            <Text style={styles.activeThreadLabel}>Active thread</Text>
-            <Text style={styles.activeThreadTitle}>{activeSession?.title || 'No active thread'}</Text>
-            <Text style={styles.activeThreadMeta} numberOfLines={1}>
-              {activeSession?.lastMessagePreview || activeSession?.workspacePath || 'Open the thread navigator to switch or create a thread.'}
-            </Text>
-            <Text style={styles.testingHelp}>테스트 기본 흐름: Connect → thread 생성/선택 → Send command → 응답 확인 → 필요 시 Resume/Cancel. approval required 흐름은 현재 환경에 따라 완전 검증이 제한될 수 있습니다.</Text>
-          </View>
-          <View style={styles.activeThreadPills}>
-            <Text style={styles.threadPill}>{activeSession?.status || 'idle'}</Text>
-            <Text style={styles.threadPillMono}>{sessionMeta[activeSession?.id || '']?.changedFilesCount || 0} files</Text>
-          </View>
-        </View>
-      </SectionCard>
 
       <ThreadRail
         open={railOpen}
@@ -131,138 +109,294 @@ export function ProjectWorkspaceScreen({
         }}
       />
 
-      <ScrollView style={styles.main} contentContainerStyle={[styles.mainContent, { paddingBottom: compact ? 220 : 180, minHeight: height * 0.72 }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <RuntimeStateCard
-          connectionStatus={connectionMode}
-          sessionStatus={activeSession?.status}
-          taskStatus={taskStatus}
-          error={error}
-          expanded={activityExpanded}
-          onToggle={onToggleActivity}
-          executionTarget={(project as Project & { executionTarget?: string } | null)?.executionTarget || 'local'}
-        />
-
-        {!!approvals.length && (
-          <SectionCard>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Approval action bar</Text>
-              <Text style={styles.waitBadge}>waiting approval</Text>
+      <ScrollView
+        style={styles.main}
+        contentContainerStyle={[styles.mainContent, { paddingBottom: compact ? 220 : 180, minHeight: height * 0.72 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Approval cards - Irisfront amber box style */}
+        {!!approvals.length && approvals.map((approval) => (
+          <View key={approval.id} style={styles.approvalCard}>
+            <View style={styles.approvalHeader}>
+              <View style={styles.approvalDot} />
+              <Text style={styles.approvalTitle}>{approval.title}</Text>
             </View>
-            <Text style={styles.sectionBody}>Runtime is paused until you approve or deny the requested action.</Text>
-            {approvals.map((approval) => (
-              <View key={approval.id} style={styles.approvalCard}>
-                <Text style={styles.approvalTitle}>{approval.title}</Text>
-                <Text style={styles.approvalText}>{approval.detail}</Text>
-                <View style={styles.approvalActions}>
-                  <SecondaryButton title="Deny" onPress={() => onResolveApproval(approval.id, false)} danger />
-                  <SecondaryButton title="Approve" onPress={() => onResolveApproval(approval.id, true)} />
-                </View>
+            <Text style={styles.approvalDetail}>{approval.detail}</Text>
+            <View style={styles.approvalActions}>
+              <TouchableOpacity
+                style={styles.approveButton}
+                onPress={() => onResolveApproval(approval.id, true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="checkmark" size={16} color="#78350f" />
+                <Text style={styles.approveText}>Approve</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.denyButton}
+                onPress={() => onResolveApproval(approval.id, false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={16} color="#92400e" />
+                <Text style={styles.denyText}>Reject</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+
+        {/* Task status - inline in workspace like Irisfront */}
+        {taskStatus && (activeSession?.status === 'running' || activeSession?.status === 'error' || activeSession?.status === 'cancelled') && (
+          <View style={styles.taskStatusCard}>
+            {activeSession?.status === 'running' && (
+              <View style={styles.taskStatusRunning}>
+                <Ionicons name="sync-outline" size={18} color="#2563eb" />
+                <Text style={styles.taskStatusRunningText}>{taskStatus.state?.title || 'Working...'}</Text>
               </View>
-            ))}
-          </SectionCard>
+            )}
+            {activeSession?.status === 'error' && (
+              <View style={styles.taskStatusError}>
+                <View style={styles.taskStatusErrorIcon}>
+                  <Ionicons name="warning-outline" size={14} color="#dc2626" />
+                </View>
+                <Text style={styles.taskStatusErrorText}>{taskStatus.state?.title || error || 'Task failed'}</Text>
+              </View>
+            )}
+            {activeSession?.status === 'cancelled' && (
+              <View style={styles.taskStatusCancelled}>
+                <View style={styles.taskStatusCancelledIcon}>
+                  <Ionicons name="close" size={14} color="#6b7280" />
+                </View>
+                <Text style={styles.taskStatusCancelledText}>Task cancelled by user</Text>
+              </View>
+            )}
+          </View>
         )}
 
-        <SectionCard>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Task timeline / execution log</Text>
-            <Text style={styles.metaMono}>{taskStatus?.status || activeSession?.status || 'idle'}</Text>
-          </View>
-          {taskStatus ? (
-            <View style={styles.timelineStack}>
-              {!!taskStatus.state?.title && <Text style={styles.timelineTitle}>{taskStatus.state.title}</Text>}
-              <Text style={styles.timelineLine}>status: {taskStatus.status}</Text>
-              {!!taskStatus.tool && <Text style={styles.timelineLine}>tool: {taskStatus.tool}</Text>}
-              {!!taskStatus.state?.output && <Text style={styles.logBlock}>{taskStatus.state.output.trim()}</Text>}
+        {changedFilesCount > 0 && (
+          <TouchableOpacity style={styles.fileListCard} onPress={() => setDiffSheetOpen(true)} activeOpacity={0.7}>
+            <View style={styles.fileListTrigger}>
+              <View style={styles.fileIconWrap}>
+                <Ionicons name="code-slash-outline" size={16} color={tokens.color.textMuted} />
+              </View>
+              <View style={styles.fileListCopy}>
+                <Text style={styles.fileListTitle}>{changedFilesCount} changed file{changedFilesCount === 1 ? '' : 's'}</Text>
+                <Text style={styles.fileListMeta} numberOfLines={1}>{diffPreview}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={tokens.color.textMuted} />
             </View>
-          ) : (
-            <Text style={styles.emptyCopy}>No runtime log yet. Start or resume a thread to populate execution activity.</Text>
-          )}
-        </SectionCard>
+          </TouchableOpacity>
+        )}
 
+        {/* Transcript - Irisfront workspace messages */}
         {hasSessions ? (
           <TranscriptPane messages={messages} loading={connectionMode === 'connecting'} />
         ) : (
-          <SectionCard>
-            <Text style={styles.sectionTitle}>Empty project</Text>
-            <Text style={styles.emptyCopy}>This project has no threads yet. Create a new thread to start the first isolated task run.</Text>
-            <View style={styles.inlineAction}><SecondaryButton title="Create first thread" onPress={onCreateSession} /></View>
-          </SectionCard>
+          <TranscriptPane messages={[]} loading={false} />
         )}
-
-        <SectionCard>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Diff review</Text>
-            <Text style={styles.metaMono}>{changedFilesCount} file{changedFilesCount === 1 ? '' : 's'}</Text>
-          </View>
-          {changedFilesCount > 0 ? (
-            <DiffReviewCard
-              path={activeSession?.workspacePath ? `${activeSession.workspacePath}/changes.patch` : 'changes.patch'}
-              additions={Math.max(1, changedFilesCount * 3)}
-              deletions={Math.max(0, changedFilesCount)}
-              preview={diffPreview}
-              status="pending"
-              onApply={() => onResolveApproval(approvals[0]?.id || 'diff_apply', true)}
-              onReject={() => onResolveApproval(approvals[0]?.id || 'diff_reject', false)}
-            />
-          ) : (
-            <Text style={styles.emptyCopy}>No changed files yet. Structured diff review cards will appear here when the active thread produces edits.</Text>
-          )}
-        </SectionCard>
-
-        <SectionCard>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Context attachments</Text>
-            <Text style={styles.metaMono}>0 attached</Text>
-          </View>
-          <Text style={styles.emptyCopy}>No context attached. Add files, notes, or artifacts to guide this thread later.</Text>
-        </SectionCard>
       </ScrollView>
 
-      <View style={styles.composerDock}>
       <ComposerBar
         value={draft}
         onChangeText={onDraftChange}
         onSend={onSend}
         onCancel={onCancelTask}
-        onResume={() => activeSession?.id && onSelectSession(activeSession.id)}
+        onResume={() => setRailOpen(true)}
         modelLabel={activeModel?.label || 'Unassigned'}
-        disabled={!activeSession || !draft.trim()}
+        disabled={connectionMode === 'disconnected'}
       />
-      </View>
+
+      <DiffReviewSheet
+        open={diffSheetOpen}
+        onClose={() => setDiffSheetOpen(false)}
+        files={changedFilesCount > 0 ? [{
+          path: activeSession?.workspacePath ? `${activeSession.workspacePath}/changes.patch` : 'changes.patch',
+          additions: Math.max(1, changedFilesCount * 3),
+          deletions: Math.max(0, changedFilesCount),
+          preview: diffPreview,
+          status: 'pending' as const,
+        }] : []}
+        onApply={() => onResolveApproval(approvals[0]?.id || 'diff_apply', true)}
+        onReject={() => onResolveApproval(approvals[0]?.id || 'diff_reject', false)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, gap: 10 },
-  actionsScroller: { flexGrow: 0 },
-  actionsRow: { flexDirection: 'row', gap: 8, paddingRight: 8 },
-  activeThreadBar: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'center' },
-  activeThreadBarCompact: { flexDirection: 'column', alignItems: 'flex-start' },
-  activeThreadCopy: { flex: 1, paddingRight: 8 },
-  activeThreadLabel: { color: tokens.color.textMuted, fontSize: 10, textTransform: 'uppercase', fontWeight: '700' },
-  activeThreadTitle: { color: tokens.color.text, fontWeight: '700', fontSize: 15, marginTop: 4 },
-  activeThreadMeta: { color: tokens.color.textMuted, marginTop: 4, fontSize: 12, lineHeight: 18 },
-  testingHelp: { color: tokens.color.textMuted, marginTop: 8, fontSize: 12, lineHeight: 18 },
-  activeThreadPills: { alignItems: 'flex-end', gap: 6 },
-  composerDock: { paddingTop: 2 },
-  threadPill: { color: tokens.color.text, backgroundColor: tokens.color.primarySoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 11, fontWeight: '700' },
-  threadPillMono: { color: tokens.color.mono, backgroundColor: tokens.color.chip, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 11, fontFamily: tokens.type.mono },
+  container: { flex: 1, backgroundColor: '#f9fafb' },
   main: { flex: 1 },
-  mainContent: { gap: 10, paddingBottom: 12 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 10 },
-  sectionTitle: { color: tokens.color.text, fontWeight: '700', fontSize: 15 },
-  waitBadge: { color: '#fde68a', backgroundColor: '#33240f', borderWidth: 1, borderColor: '#a16207', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 11, fontWeight: '700' },
-  metaMono: { color: tokens.color.mono, fontFamily: tokens.type.mono, fontSize: 12 },
-  sectionBody: { color: tokens.color.textSoft, lineHeight: 18 },
-  approvalCard: { backgroundColor: tokens.color.panelAlt, borderWidth: 1, borderColor: '#5b3a00', borderRadius: 12, padding: 12, marginTop: 8 },
-  approvalTitle: { color: '#fde68a', fontWeight: '700' },
-  approvalText: { color: '#fef3c7', marginTop: 6, lineHeight: 18 },
-  approvalActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  timelineStack: { gap: 6 },
-  timelineTitle: { color: tokens.color.text, fontWeight: '700' },
-  timelineLine: { color: tokens.color.textSoft, fontFamily: tokens.type.mono },
-  logBlock: { color: tokens.color.text, backgroundColor: tokens.color.panelMuted, borderWidth: 1, borderColor: tokens.color.border, borderRadius: 12, padding: 10, fontFamily: tokens.type.mono },
-  emptyCopy: { color: tokens.color.textMuted, lineHeight: 19 },
-  inlineAction: { marginTop: 12, alignSelf: 'flex-start' },
+  mainContent: { gap: 20, paddingHorizontal: 16, paddingTop: 16 },
+
+  // Approval card - Irisfront amber style
+  approvalCard: {
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 20,
+    padding: 16,
+    gap: 12,
+  },
+  approvalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  approvalDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#f59e0b',
+  },
+  approvalTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#92400e',
+  },
+  approvalDetail: {
+    fontSize: 14,
+    color: '#78350f',
+    lineHeight: 20,
+  },
+  approvalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  approveButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#fbbf24',
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  approveText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#78350f',
+  },
+  denyButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  denyText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#92400e',
+  },
+
+  // Task status cards - Irisfront state bars
+  taskStatusCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  taskStatusRunning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  taskStatusRunningText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1e40af',
+  },
+  taskStatusError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  taskStatusErrorIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  taskStatusErrorText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#991b1b',
+    flex: 1,
+  },
+  taskStatusCancelled: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  taskStatusCancelledIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  taskStatusCancelledText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6b7280',
+  },
+
+  fileListCard: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 20,
+    padding: 14,
+  },
+  fileListTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  fileIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f9fafb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fileListCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  fileListTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: tokens.color.text,
+  },
+  fileListMeta: {
+    fontSize: 12,
+    color: tokens.color.textMuted,
+  },
 });

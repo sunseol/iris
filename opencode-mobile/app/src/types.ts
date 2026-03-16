@@ -96,6 +96,18 @@ export type SessionMessage = {
   createdAt: string;
   pending?: boolean;
   kind?: 'prompt' | 'output' | 'error' | 'status';
+  thinking?: string | null;
+  agent?: string | null;
+  toolCalls?: ToolCallInfo[];
+};
+
+export type ToolCallInfo = {
+  tool: string;
+  callID?: string;
+  status: 'running' | 'completed' | 'error';
+  input?: Record<string, unknown> | null;
+  output?: string | null;
+  title?: string | null;
 };
 
 export type ApprovalRequest = {

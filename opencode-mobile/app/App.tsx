@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { bridgeClient } from './src/rpc';
 import {
+  clearAllStorage,
   loadEndpoint,
   loadPairingCode,
   migrateLegacyProjectState,
@@ -29,30 +30,33 @@ import {
 import { AppInput, GhostButton, Label, PrimaryButton, SecondaryButton, SectionCard } from './src/components';
 import { colors } from './src/theme';
 import { formatStatus, formatTime } from './src/format';
-import {
-  sampleActiveSessionIdByProject,
-  sampleApprovalsBySessionId,
-  sampleAuthProfiles,
-  sampleMessagesBySessionId,
-  sampleModelCatalog,
-  sampleProjects,
-  sampleProjectSessions,
-  sampleTaskStatusBySessionId,
-} from './src/sample-data';
 import { getNextOnboardingStep, getOnboardingCopy } from './src/onboarding';
 import { parsePairingPayload } from './src/qr-placeholder';
 import { HostHealth } from './src/host-types';
-import { sampleHostHealth } from './src/sample-host';
 import { makeCorrelationId } from './src/debug';
 import { ProjectWorkspaceScreen } from './src/screens/ProjectWorkspaceScreen';
 import { ProjectsScreen } from './src/screens/ProjectsScreen';
 import { ModelsAuthScreen } from './src/screens/ModelsAuthScreen';
-import { ConnectionScreen } from './src/screens/ConnectionScreen';
+import { SettingsSheet } from './src/components/SettingsSheet';
 
-const DEFAULT_ENDPOINT = 'ws://192.168.0.10:7345';
-const SAMPLE_QR_PAYLOAD = '{"endpoint":"ws://192.168.0.10:7345","pairingCode":"PAIR-1234"}';
+const DEFAULT_ENDPOINT = 'ws://127.0.0.1:7345';
+const SAMPLE_QR_PAYLOAD = '{"endpoint":"ws://127.0.0.1:7345","pairingCode":"PAIR-1234"}';
 
-type Screen = 'workspace' | 'projects' | 'modelsAuth' | 'connection';
+const DEFAULT_MODEL_CATALOG: ModelConfig[] = [
+  { id: 'anthropic/claude-sonnet', providerId: 'anthropic', label: 'Claude Sonnet', available: true, supportsTools: true, supportsStreaming: true, recommended: true },
+  { id: 'anthropic/claude-haiku', providerId: 'anthropic', label: 'Claude Haiku', available: true, supportsTools: true, supportsStreaming: true },
+];
+
+const DEFAULT_HOST_HEALTH: HostHealth = {
+  bridgeStatus: 'offline',
+  runtimeMode: 'unknown',
+  hostLabel: '',
+  hostOs: '',
+  lastSeenAt: '',
+  version: '',
+};
+
+type Screen = 'workspace' | 'projects' | 'modelsAuth';
 
 function projectWorkspace(project: Project | null) {
   return project?.workspacePath || '/home/jakeseol/.openclaw/workspace';
@@ -60,6 +64,7 @@ function projectWorkspace(project: Project | null) {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('workspace');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const autoTestBridge = process.env.EXPO_PUBLIC_AUTOTEST_BRIDGE || '';
   const autoTestMessage = process.env.EXPO_PUBLIC_AUTOTEST_MESSAGE || 'hi';
   const autoTestEnabled = process.env.EXPO_PUBLIC_AUTOTEST_MODE === '1';
@@ -71,17 +76,19 @@ export default function App() {
   const [scannerHint, setScannerHint] = useState<string | null>(null);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [mode, setMode] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  const [hostHealth, setHostHealth] = useState<HostHealth>(sampleHostHealth);
-  const [projects, setProjects] = useState<Project[]>(sampleProjects);
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(sampleProjects[0]?.id ?? null);
-  const [activeSessionIdByProject, setActiveSessionMap] = useState<ActiveSessionIdByProject>(sampleActiveSessionIdByProject);
-  const [sessions, setSessions] = useState<ProjectSession[]>(sampleProjectSessions);
-  const [messagesBySessionId, setMessagesBySessionId] = useState<Record<string, ChatMessage[]>>(sampleMessagesBySessionId);
-  const [approvalsBySessionId, setApprovalsBySessionId] = useState<Record<string, ApprovalRequest[]>>(sampleApprovalsBySessionId);
-  const [taskStatusBySessionId, setTaskStatusBySessionId] = useState<Record<string, TaskStatusEvent | null>>(sampleTaskStatusBySessionId);
-  const [authProfiles, setAuthProfiles] = useState<AuthProfile[]>(sampleAuthProfiles);
-  const [modelCatalog] = useState<ModelConfig[]>(sampleModelCatalog);
+  const [hostHealth, setHostHealth] = useState<HostHealth>(DEFAULT_HOST_HEALTH);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const [activeSessionIdByProject, setActiveSessionMap] = useState<ActiveSessionIdByProject>({});
+  const [sessions, setSessions] = useState<ProjectSession[]>([]);
+  const [messagesBySessionId, setMessagesBySessionId] = useState<Record<string, ChatMessage[]>>({});
+  const [approvalsBySessionId, setApprovalsBySessionId] = useState<Record<string, ApprovalRequest[]>>({});
+  const [taskStatusBySessionId, setTaskStatusBySessionId] = useState<Record<string, TaskStatusEvent | null>>({});
+  const [activeAgent, setActiveAgent] = useState<string | null>(null);
+  const [authProfiles, setAuthProfiles] = useState<AuthProfile[]>([]);
+  const [modelCatalog] = useState<ModelConfig[]>(DEFAULT_MODEL_CATALOG);
   const activeSessionIdRef = useRef<string | null>(null);
+  const handleEventRef = useRef<(event: RpcEvent) => void>(() => {});
   const [activityExpanded, setActivityExpanded] = useState(false);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -155,9 +162,19 @@ export default function App() {
       if (savedProjects.length) setProjects(savedProjects);
       if (savedActiveProjectId) setActiveProjectId(savedActiveProjectId);
       if (Object.keys(savedSessionMap).length) setActiveSessionMap((prev) => ({ ...prev, ...savedSessionMap }));
+      // Provide a default auth profile so the UI isn't completely blank
+      setAuthProfiles((prev) => prev.length ? prev : [{
+        id: 'auth_opencode_default',
+        providerId: 'anthropic',
+        label: 'OpenCode default',
+        status: 'disconnected',
+        authMethod: 'bridge_inherited',
+        accountLabel: 'Inherited from bridge',
+        lastValidatedAt: null,
+      }]);
     });
 
-    const off = bridgeClient.onEvent(handleEvent);
+    const off = bridgeClient.onEvent((evt: RpcEvent) => handleEventRef.current(evt));
     return () => {
       off();
       bridgeClient.disconnect();
@@ -241,6 +258,8 @@ export default function App() {
           const activeApprovalCount = (approvalsBySessionId[resolvedActiveSessionId] || []).length;
           patchSession(resolvedActiveSessionId, { status: deriveSessionStatus({ hasPendingApproval: activeApprovalCount > 0, connectionMode: 'connected' }) });
         }
+        // Mark bridge-inherited auth profiles as connected
+        setAuthProfiles((prev) => prev.map((p) => p.authMethod === 'bridge_inherited' ? { ...p, status: 'connected', lastValidatedAt: new Date().toISOString() } : p));
         setInfo('Bridge connected. You can create a session or resume recent work.');
         break;
       }
@@ -248,17 +267,21 @@ export default function App() {
         setMode('disconnected');
         pushRecentEvent('connection.closed');
         if (resolvedActiveSessionId) patchSession(resolvedActiveSessionId, { status: deriveSessionStatus({ connectionMode: 'disconnected' }), lastError: 'Bridge disconnected' });
+        setAuthProfiles((prev) => prev.map((p) => p.authMethod === 'bridge_inherited' ? { ...p, status: 'disconnected' } : p));
         setInfo('Bridge disconnected. Retry the connection or restart the bridge.');
         break;
       }
       case 'session.updated': {
-        const params = event.params as SessionSummary | (ProjectSession & { projectId?: string; workspace?: string });
+        const params = event.params as SessionSummary | (ProjectSession & { projectId?: string; workspace?: string; activeAgent?: string });
         const projectId = params.projectId || activeProjectId || projects[0]?.id || 'proj_demo';
         const session: ProjectSession = {
           ...params,
           projectId,
           workspacePath: params.workspacePath || params.workspace || projectWorkspace(activeProject),
         };
+        if ((params as { activeAgent?: string }).activeAgent) {
+          setActiveAgent((params as { activeAgent?: string }).activeAgent || null);
+        }
         setSessions((prev) => {
           const next = prev.filter((item) => item.id !== session.id);
           return [session, ...next].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -304,6 +327,33 @@ export default function App() {
           lastError: params.status === 'error' ? params.state?.output || error || 'runtime error' : params.status === 'cancelled' || params.status === 'canceled' ? 'Task cancelled' : null,
           lastMessagePreview: params.state?.title || params.state?.output || undefined,
         });
+        // Attach tool call info to the last pending assistant message
+        if (params.tool && params.sessionId === activeSessionIdRef.current) {
+          setMessagesBySessionId((prev) => {
+            const current = prev[params.sessionId] || [];
+            const lastAssistant = [...current].reverse().find((m) => m.role === 'assistant' && m.pending);
+            if (!lastAssistant) return prev;
+            const toolCall = {
+              tool: params.tool!,
+              callID: params.callID,
+              status: (params.status === 'tool-use' ? 'running' : params.status === 'error' ? 'error' : 'completed') as 'running' | 'completed' | 'error',
+              input: params.state?.input || null,
+              output: params.state?.output || null,
+              title: params.state?.title || null,
+            };
+            const existingCalls = lastAssistant.toolCalls || [];
+            const existingIdx = existingCalls.findIndex((tc) => tc.callID === params.callID);
+            const nextCalls = existingIdx >= 0
+              ? existingCalls.map((tc, i) => i === existingIdx ? toolCall : tc)
+              : [...existingCalls, toolCall];
+            return {
+              ...prev,
+              [params.sessionId]: current.map((m) =>
+                m.id === lastAssistant.id ? { ...m, toolCalls: nextCalls } : m
+              ),
+            };
+          });
+        }
         setActivityExpanded(false);
         break;
       }
@@ -343,8 +393,26 @@ export default function App() {
         setInfo(`Approval ${approval.status || 'updated'}.`);
         break;
       }
+      case 'message.thinking': {
+        const params = event.params as { sessionId: string; thinking: string };
+        if (params.sessionId !== activeSessionIdRef.current) return;
+        setMessagesBySessionId((prev) => {
+          const current = prev[params.sessionId] || [];
+          // Attach thinking to the last pending assistant message
+          const lastAssistant = [...current].reverse().find((m) => m.role === 'assistant' && m.pending);
+          if (!lastAssistant) return prev;
+          return {
+            ...prev,
+            [params.sessionId]: current.map((m) =>
+              m.id === lastAssistant.id ? { ...m, thinking: (m.thinking || '') + params.thinking } : m
+            ),
+          };
+        });
+        break;
+      }
     }
   }
+  handleEventRef.current = handleEvent;
 
   async function refreshHostInfo() {
     if (!bridgeClient.isConnected()) return;
@@ -364,20 +432,33 @@ export default function App() {
       await bridgeClient.connect(endpoint);
       await saveEndpoint(endpoint);
       const result = await bridgeClient.listSessions(activeProjectId ? { projectId: activeProjectId } : undefined);
-      const nextSessions = result.sessions.length
-        ? result.sessions.map((session) => ({ ...session, projectId: session.projectId || activeProjectId || activeProject?.id || 'proj_demo' }))
-        : sampleProjectSessions;
+      const nextSessions = result.sessions.map((session) => ({ ...session, projectId: session.projectId || activeProjectId || activeProject?.id || 'proj_demo' }));
       setSessions((prev) => {
         const keepOtherProjects = prev.filter((session) => session.projectId !== (activeProjectId || activeProject?.id));
         return [...keepOtherProjects, ...nextSessions];
       });
       setMode('connected');
       await refreshHostInfo();
+      // Auto-resume active session or auto-create first session if none exist
       if (activeSessionId) {
         try {
           const resumed = await bridgeClient.resumeSession({ projectId: activeProjectId || undefined, sessionId: activeSessionId });
           setMessagesBySessionId((prev) => ({ ...prev, [resumed.session.id]: resumed.messages }));
           setApprovalsBySessionId((prev) => ({ ...prev, [resumed.session.id]: resumed.approvals || [] }));
+        } catch {}
+      } else if (nextSessions.length === 0) {
+        // No sessions at all — auto-create one so the user can start immediately
+        await createSession();
+      } else {
+        // Sessions exist but none selected — resume the first one
+        const first = nextSessions[0];
+        try {
+          const resumed = await bridgeClient.resumeSession({ projectId: activeProjectId || undefined, sessionId: first.id });
+          setMessagesBySessionId((prev) => ({ ...prev, [resumed.session.id]: resumed.messages }));
+          setApprovalsBySessionId((prev) => ({ ...prev, [resumed.session.id]: resumed.approvals || [] }));
+          const nextSessionMap = { ...activeSessionIdByProject, [activeProjectId || 'proj_demo']: first.id };
+          setActiveSessionMap(nextSessionMap);
+          await saveSessionId(first.id, activeProjectId || undefined);
         } catch {}
       }
     } catch (err) {
@@ -560,9 +641,28 @@ export default function App() {
 
   async function sendMessage(forcedText?: string, forcedSessionId?: string) {
     const outgoing = (forcedText ?? draft).trim();
-    const sessionId = forcedSessionId ?? activeSessionId;
+    let sessionId = forcedSessionId ?? activeSessionId;
     const projectId = activeProjectId || activeProject?.id || projects[0]?.id || 'proj_demo';
-    if (!outgoing || !sessionId) return;
+    if (!outgoing) return;
+    // Auto-create session if none exists
+    if (!sessionId) {
+      try {
+        const workspace = projectWorkspace(activeProject);
+        const result = await bridgeClient.createSession({ projectId, workspace, correlationId: makeCorrelationId('auto') });
+        const nextSession: ProjectSession = { ...result.session, projectId, workspacePath: result.session.workspacePath || workspace, status: 'idle' };
+        setSessions((prev) => [nextSession, ...prev.filter((item) => item.id !== nextSession.id)]);
+        setMessagesBySessionId((prev) => ({ ...prev, [nextSession.id]: result.messages }));
+        setApprovalsBySessionId((prev) => ({ ...prev, [nextSession.id]: result.approvals || [] }));
+        const nextSessionMap = { ...activeSessionIdByProject, [projectId]: nextSession.id };
+        setActiveSessionMap(nextSessionMap);
+        await saveSessionId(nextSession.id, projectId);
+        sessionId = nextSession.id;
+        pushRecentEvent(`session.auto-create: ${nextSession.id}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'failed to auto-create session');
+        return;
+      }
+    }
     const text = outgoing;
     const correlationId = makeCorrelationId('send');
     await bridgeClient.log({ event: 'message.send.start', correlationId, projectId, activeSessionId: sessionId, text });
@@ -667,23 +767,9 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <KeyboardAvoidingView style={styles.keyboardSafe} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <View style={styles.topBarCopy}>
-            <Text style={styles.title}>OpenCode Mobile</Text>
-            <Text style={styles.subtitle}>{screen === 'workspace' ? 'Project-scoped session console' : screen === 'projects' ? 'Projects' : screen === 'modelsAuth' ? 'Models & auth' : 'Connection'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.primaryNavGrid}>
-          <View style={styles.primaryNavCell}><GhostButton title="Work" icon="grid-outline" onPress={() => setScreen('workspace')} active={screen === 'workspace'} /></View>
-          <View style={styles.primaryNavCell}><GhostButton title="Projects" icon="folder-open-outline" onPress={() => setScreen('projects')} active={screen === 'projects'} /></View>
-          <View style={styles.primaryNavCell}><GhostButton title="Model" icon="sparkles-outline" onPress={() => setScreen('modelsAuth')} active={screen === 'modelsAuth'} /></View>
-          <View style={styles.primaryNavCell}><GhostButton title="Conn" icon="git-network-outline" onPress={() => setScreen('connection')} active={screen === 'connection'} /></View>
-        </View>
-
         {screen === 'workspace' ? (
           <ProjectWorkspaceScreen
             project={activeProject}
@@ -697,6 +783,7 @@ export default function App() {
             connectionMode={mode}
             authProfile={activeAuthProfile}
             activeModel={activeModel}
+            activeAgent={activeAgent}
             error={error}
             draft={draft}
             activityExpanded={activityExpanded}
@@ -707,8 +794,7 @@ export default function App() {
             onCreateSession={() => createSession()}
             onSelectSession={selectSession}
             onOpenProjects={() => setScreen('projects')}
-            onOpenModelsAuth={() => setScreen('modelsAuth')}
-            onOpenConnection={() => setScreen('connection')}
+            onOpenSettings={() => setSettingsOpen(true)}
             onResolveApproval={resolveApproval}
           />
         ) : screen === 'projects' ? (
@@ -719,7 +805,7 @@ export default function App() {
             onCreateProject={createProject}
             onBack={() => setScreen('workspace')}
           />
-        ) : screen === 'modelsAuth' ? (
+        ) : (
           <ModelsAuthScreen
             project={activeProject}
             authProfiles={authProfiles}
@@ -731,30 +817,63 @@ export default function App() {
             onToggleAuthStatus={toggleAuthStatus}
             onBack={() => setScreen('workspace')}
           />
-        ) : (
-          <ConnectionScreen
-            endpoint={endpoint}
-            onChangeEndpoint={setEndpoint}
-            onConnect={connect}
-            onRefreshHost={refreshHostInfo}
-            onOpenQrScanner={openQrScanner}
-            onSimulateQr={simulateQrScan}
-            onSavePairing={savePairing}
-            pairingCode={pairingCode}
-            onChangePairingCode={setPairingCode}
-            mode={mode}
-            info={info}
-            error={error}
-            hostHealth={hostHealth}
-            scannerOpen={scannerOpen}
-            scannerHint={scannerHint}
-            scanner={scannerOpen ? <View style={styles.cameraFrame}><CameraView style={styles.camera} barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={handleBarcodeScanned} /></View> : null}
-            onDismissScanner={() => { setScannerOpen(false); setScannerHint(null); }}
-            diagnostics={diagnostics}
-            recentEvents={recentEvents}
-            onBack={() => setScreen('workspace')}
-          />
         )}
+
+        <SettingsSheet
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          endpoint={endpoint}
+          onChangeEndpoint={setEndpoint}
+          onConnect={connect}
+          onRefreshHost={refreshHostInfo}
+          onOpenQrScanner={openQrScanner}
+          onSimulateQr={simulateQrScan}
+          onSavePairing={savePairing}
+          pairingCode={pairingCode}
+          onChangePairingCode={setPairingCode}
+          mode={mode}
+          info={info}
+          error={error}
+          hostHealth={hostHealth}
+          scannerOpen={scannerOpen}
+          scannerHint={scannerHint}
+          scanner={scannerOpen ? <View style={styles.cameraFrame}><CameraView style={styles.camera} barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={handleBarcodeScanned} /></View> : null}
+          onDismissScanner={() => { setScannerOpen(false); setScannerHint(null); }}
+          diagnostics={diagnostics}
+          recentEvents={recentEvents}
+          onOpenModelsAuth={() => { setSettingsOpen(false); setScreen('modelsAuth'); }}
+          onClearCache={async () => {
+            await clearAllStorage();
+            setProjects([]);
+            setActiveProjectId(null);
+            setSessions([]);
+            setMessagesBySessionId({});
+            setApprovalsBySessionId({});
+            setTaskStatusBySessionId({});
+            setActiveSessionMap({});
+            setAuthProfiles([]);
+            setEndpoint(DEFAULT_ENDPOINT);
+            setPairingCode('');
+            setMode('disconnected');
+            bridgeClient.disconnect();
+            setInfo('Cache cleared. Reconnect to start fresh.');
+            setError(null);
+            // Re-run migration to create a fresh default project
+            const { projects: freshProjects, activeProjectId: freshId, activeSessionIdByProject: freshMap } = await migrateLegacyProjectState();
+            if (freshProjects.length) setProjects(freshProjects);
+            if (freshId) setActiveProjectId(freshId);
+            if (Object.keys(freshMap).length) setActiveSessionMap(freshMap);
+            setAuthProfiles([{
+              id: 'auth_opencode_default',
+              providerId: 'anthropic',
+              label: 'OpenCode default',
+              status: 'disconnected',
+              authMethod: 'bridge_inherited',
+              accountLabel: 'Inherited from bridge',
+              lastValidatedAt: null,
+            }]);
+          }}
+        />
       </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -762,64 +881,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: '#f9fafb' },
   keyboardSafe: { flex: 1 },
-  container: { flex: 1, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 10, gap: 10 },
-  topBar: { gap: 8 },
-  topBarCopy: { paddingRight: 4 },
-  primaryNavGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 2, marginBottom: 2, marginHorizontal: -4 },
-  primaryNavCell: { width: '50%', paddingHorizontal: 4, paddingVertical: 4 },
-  title: { color: colors.text, fontSize: 22, fontWeight: '700' },
-  subtitle: { color: colors.textMuted, marginTop: 2, maxWidth: 220 },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '600' },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  actionsInline: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  sessionHeaderCopy: { flex: 1, paddingRight: 8 },
-  chatPaneFull: { flex: 1 },
-  settingsStack: { gap: 12, paddingBottom: 24 },
-  hostGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
-  hostCell: { width: '48%', backgroundColor: colors.panelAlt, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: '#1f2937' },
-  cameraFrame: { marginTop: 12, overflow: 'hidden', borderRadius: 16, borderWidth: 1, borderColor: '#1f2937', height: 280 },
+  container: { flex: 1 },
+  cameraFrame: { marginTop: 12, overflow: 'hidden', borderRadius: 16, borderWidth: 1, borderColor: '#e5e7eb', height: 280 },
   camera: { flex: 1 },
-  hostLabel: { color: colors.textMuted, fontSize: 12, marginBottom: 4 },
-  hostValue: { color: colors.text, fontWeight: '600' },
-  badge: { marginTop: 4, fontWeight: '700' },
-  infoText: { color: colors.textSoft, marginTop: 8, lineHeight: 20 },
-  helperText: { color: colors.textMuted, marginTop: 8, fontSize: 12 },
-  statusBlock: { minHeight: 104, justifyContent: 'flex-start' },
-  error: { color: '#fca5a5', marginTop: 8, minHeight: 20 },
-  statusPlaceholder: { marginTop: 8, minHeight: 20, color: 'transparent' },
-  retryRow: { marginTop: 10, flexDirection: 'row', minHeight: 40 },
-  retryPlaceholder: { height: 40 },
-  metaPill: { color: colors.textSoft, backgroundColor: '#1e293b', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 12 },
-  runtimeMetaWrap: { marginTop: 10, gap: 4 },
-  runtimeMeta: { color: colors.textMuted, fontSize: 12 },
-  activityHeaderCopy: { flex: 1, paddingRight: 8 },
-  activitySummary: { color: colors.textMuted, marginTop: 6, fontSize: 12, lineHeight: 18 },
-  activityBody: { marginTop: 10 },
-  activityOutputWrap: { marginTop: 8, maxHeight: 160, borderRadius: 12, backgroundColor: colors.panelAlt, borderWidth: 1, borderColor: '#1f2937' },
-  activityOutputScroll: { paddingHorizontal: 10, paddingVertical: 2 },
-  sessionItem: { padding: 10, borderRadius: 12, backgroundColor: colors.panelAlt, marginTop: 10, borderWidth: 1, borderColor: '#1e293b' },
-  sessionItemActive: { borderColor: colors.primary },
-  sessionTitle: { color: colors.text, fontWeight: '700' },
-  sessionMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
-  preview: { color: colors.textSoft, marginTop: 6, fontSize: 12, lineHeight: 16 },
-  approvalsWrap: { marginTop: 12, gap: 10 },
-  approvalCard: { backgroundColor: '#221a0f', borderColor: '#5b3a00', borderWidth: 1, borderRadius: 14, padding: 12 },
-  approvalTitle: { color: '#fde68a', fontWeight: '700' },
-  approvalRisk: { color: '#fbbf24', fontSize: 12, fontWeight: '700' },
-  approvalDetail: { color: '#fef3c7', marginTop: 6, marginBottom: 10, lineHeight: 18 },
-  messages: { flex: 1 },
-  messagesContent: { paddingBottom: 8 },
-  emptyState: { paddingVertical: 32, alignItems: 'center', justifyContent: 'center' },
-  emptyTitle: { color: colors.text, fontWeight: '700', fontSize: 16 },
-  emptyText: { color: colors.textMuted, marginTop: 8, textAlign: 'center', maxWidth: 360, lineHeight: 20 },
-  messageBubble: { borderRadius: 14, padding: 12, marginBottom: 10, maxWidth: '92%' },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: colors.primarySoft },
-  assistantBubble: { alignSelf: 'flex-start', backgroundColor: '#1f2937' },
-  messageRole: { color: colors.textSoft, fontSize: 11, textTransform: 'uppercase', marginBottom: 6 },
-  messageTime: { color: colors.textMuted, fontSize: 11 },
-  messageText: { color: colors.text, lineHeight: 20 },
-  composer: { gap: 10, marginTop: 8 },
-  composerInput: { minHeight: 80, textAlignVertical: 'top' },
 });

@@ -4,15 +4,19 @@
     "slug": "opencode-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "android": {
       "package": "ai.openclaw.opencodemobile",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
+    "ios": {
+      "bundleIdentifier": "ai.openclaw.opencodemobile"
+    },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      ["expo-camera", { "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for QR code scanning." }]
     ]
   }
 }

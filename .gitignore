@@ -8,3 +8,4 @@ android/build/
 **/android/build/
 app/android/build/
 **/*.so
+nul

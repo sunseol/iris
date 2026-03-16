@@ -10,6 +10,10 @@ export function createRuntimeParser(handlers = {}) {
     const text = String(chunk);
 
     if (source === 'stderr') {
+      // Skip non-error noise from OpenCode startup (config warnings, bun install, etc.)
+      if (looksLikeStartupNoise(text)) {
+        return { kind: 'noise', text };
+      }
       if (looksLikeApproval(text)) {
         currentApproval = {
           id: `approval_${Date.now()}`,
@@ -45,7 +49,7 @@ export function createRuntimeParser(handlers = {}) {
           },
         });
         if (result === 'boundary') sawStructuredBoundary = true;
-      } else if (line) {
+      } else if (line && !looksLikeStartupNoise(line)) {
         handlers.onAssistantText?.(sessionId, line + '\n');
         if (looksCompleteBoundary(line)) {
           handlers.onAssistantBoundary?.(sessionId);
@@ -78,27 +82,38 @@ function handleStructuredEvent(sessionId, payload, handlers, approvalState) {
     handlers.onRuntimeSession?.(sessionId, payload.sessionID);
   }
 
+  // Detect agent name from structured events
+  const agent = payload.agent || payload.part?.agent || payload.item?.agent || null;
+  if (agent) {
+    handlers.onAgentDetected?.(sessionId, agent);
+  }
+
   if (payload.type === 'tool_use' && payload.part?.tool) {
     handlers.onToolUse?.(sessionId, {
       tool: payload.part.tool,
       callID: payload.part.callID,
       state: payload.part.state,
+      input: payload.part.input || null,
+      output: payload.part.output || null,
     });
     return 'tool';
   }
 
   if (payload.type === 'text' && payload.part?.text) {
-    const cleaned = sanitizeAssistantText(payload.part.text);
-    if (cleaned) {
-      handlers.onAssistantText?.(sessionId, cleaned);
-      if (looksLikeApproval(cleaned)) {
+    const extracted = extractThinkingAndText(payload.part.text);
+    if (extracted.thinking) {
+      handlers.onThinking?.(sessionId, extracted.thinking);
+    }
+    if (extracted.text) {
+      handlers.onAssistantText?.(sessionId, extracted.text);
+      if (looksLikeApproval(extracted.text)) {
         approvalState.currentApproval = {
           id: `approval_${Date.now()}`,
           sessionId,
           title: 'Runtime approval requested',
-          detail: cleaned,
+          detail: extracted.text,
           createdAt: now(),
-          risk: classifyRisk(cleaned),
+          risk: classifyRisk(extracted.text),
           status: 'pending',
         };
         handlers.onApprovalRequested?.(approvalState.currentApproval);
@@ -113,7 +128,13 @@ function handleStructuredEvent(sessionId, payload, handlers, approvalState) {
   }
 
   if (payload.type === 'item.completed' && payload.item?.type === 'agent_message' && payload.item?.text) {
-    handlers.onAssistantText?.(sessionId, sanitizeAssistantText(payload.item.text));
+    const extracted = extractThinkingAndText(payload.item.text);
+    if (extracted.thinking) {
+      handlers.onThinking?.(sessionId, extracted.thinking);
+    }
+    if (extracted.text) {
+      handlers.onAssistantText?.(sessionId, extracted.text);
+    }
     handlers.onAssistantBoundary?.(sessionId);
     return 'boundary';
   }
@@ -126,8 +147,20 @@ function handleStructuredEvent(sessionId, payload, handlers, approvalState) {
   return 'ignore';
 }
 
+function extractThinkingAndText(text) {
+  const thinkMatches = [];
+  const cleaned = String(text).replace(/<think>([\s\S]*?)<\/think>\s*/g, (_, content) => {
+    thinkMatches.push(content.trim());
+    return '';
+  });
+  return {
+    text: cleaned.trim(),
+    thinking: thinkMatches.length ? thinkMatches.join('\n') : null,
+  };
+}
+
 function sanitizeAssistantText(text) {
-  return String(text).replace(/<think>[\s\S]*?<\/think>\s*/g, '').trim();
+  return extractThinkingAndText(text).text;
 }
 
 function tryParseJson(line) {
@@ -158,11 +191,25 @@ function looksLikeApproval(text) {
 }
 
 function looksCompleteBoundary(text) {
-  return /done|completed|finished/i.test(text);
+  // Only match actual OpenCode completion signals, not startup noise like 'Done! Checked 12 packages'
+  if (looksLikeStartupNoise(text)) return false;
+  return /^(done|completed|finished)\.?$/i.test(text.trim());
 }
 
 function classifyRisk(text) {
   if (/rm\s|sudo|delete|overwrite|install/i.test(text)) return 'high';
   if (/bash|command|write|edit|apply/i.test(text)) return 'medium';
   return 'low';
+}
+
+function looksLikeStartupNoise(text) {
+  const t = String(text).trim();
+  if (!t) return true;
+  return /^\[config-context\]/i.test(t)
+    || /^bun\s+(install|add|remove)/i.test(t)
+    || /^Done!\s+Checked/i.test(t)
+    || /^(npm|yarn|pnpm)\s+(WARN|notice|info)/i.test(t)
+    || /^Resolving\s+dependencies/i.test(t)
+    || /^\s*\d+\s+packages?\s/i.test(t)
+    || /^defaulting to CLI paths/i.test(t);
 }

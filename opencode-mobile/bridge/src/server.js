@@ -13,6 +13,7 @@ const requestSchema = z.object({
 
 const port = Number(process.env.PORT || 7345);
 const adapter = createAdapter();
+console.log(`[bridge] adapter=${adapter.constructor.name} mode=${process.env.OPENCODE_BRIDGE_MODE || 'process'} port=${port}`);
 const wss = new WebSocketServer({ port });
 
 function send(socket, payload) {
@@ -48,6 +49,9 @@ const runtimeHandlers = {
   },
   onApprovalResolved(approval) {
     broadcast({ jsonrpc: '2.0', method: 'approval.resolved', params: approval });
+  },
+  onThinking(sessionId, thinking) {
+    broadcast({ jsonrpc: '2.0', method: 'message.thinking', params: { sessionId, thinking } });
   },
 };
 

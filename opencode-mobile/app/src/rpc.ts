@@ -1,5 +1,4 @@
 import { ApprovalRequest, ChatMessage, ProjectSession, RpcEvent, RpcRequest, RpcResponse } from './types';
-
 const DEFAULT_CONNECT_TIMEOUT_MS = 5000;
 
 export type SessionListResult = { sessions: ProjectSession[] };
@@ -16,7 +15,14 @@ export class BridgeClient {
   connect(url: string, timeoutMs = DEFAULT_CONNECT_TIMEOUT_MS) {
     return new Promise<void>((resolve, reject) => {
       let settled = false;
-      const socket = new WebSocket(url);
+      // On web served over HTTPS, browsers block ws:// (Mixed Content).
+      // Auto-upgrade to wss:// so the connection attempt isn't silently killed.
+      // On native (Expo Go), ws:// works fine — no upgrade needed.
+      let effectiveUrl = url;
+      if (typeof window !== 'undefined' && typeof location !== 'undefined' && location.protocol === 'https:') {
+        effectiveUrl = url.replace(/^ws:\/\//i, 'wss://');
+      }
+      const socket = new WebSocket(effectiveUrl);
       const timeout = setTimeout(() => {
         if (settled) return;
         settled = true;

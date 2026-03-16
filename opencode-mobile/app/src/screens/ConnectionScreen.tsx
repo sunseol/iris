@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppInput, Label, PrimaryButton, SecondaryButton, SectionCard } from '../components';
 import { HostHealth } from '../host-types';
 import { colors } from '../theme';
@@ -61,19 +62,23 @@ export function ConnectionScreen({
     <ScrollView contentContainerStyle={styles.container}>
       <SectionCard>
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.title}>Connection</Text>
-            <Text style={styles.subtitle}>Bridge endpoint, pairing, reconnect, and host/runtime health.</Text>
+            <Text style={styles.subtitle}>Bridge endpoint, pairing, and host health.</Text>
           </View>
-          <SecondaryButton title="Back" onPress={onBack} />
+          <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
+          </TouchableOpacity>
         </View>
-        <Text style={styles.helper}>첫 실행에서는 bridge endpoint를 입력하고 Connect를 누르세요. 연결 실패 시 아래 Diagnostics와 Recent events를 함께 공유하면 문제 재현이 쉬워집니다.</Text>
       </SectionCard>
 
       <SectionCard>
         <View style={styles.rowBetween}>
           <Text style={styles.sectionTitle}>Bridge status</Text>
-          <Text style={styles.badge}>{formatStatus(mode)}</Text>
+          <View style={[styles.statusPill, mode === 'connected' && styles.statusPillConnected]}>
+            <View style={[styles.statusDot, { backgroundColor: mode === 'connected' ? '#22c55e' : mode === 'connecting' ? '#f59e0b' : '#ef4444' }]} />
+            <Text style={[styles.statusLabel, mode === 'connected' && styles.statusLabelConnected]}>{formatStatus(mode)}</Text>
+          </View>
         </View>
         <Text style={styles.info}>{info}</Text>
         {!!error && <Text style={styles.error}>{error}</Text>}
@@ -86,7 +91,6 @@ export function ConnectionScreen({
       <SectionCard>
         <Label>Bridge endpoint</Label>
         <AppInput value={endpoint} onChangeText={onChangeEndpoint} autoCapitalize="none" placeholder="ws://host:7345" />
-        <Text style={styles.helper}>테스터는 호스트에서 실행 중인 bridge 주소를 이 칸에 넣으면 됩니다. 예: ws://192.168.0.10:7345</Text>
         <PrimaryButton title={mode === 'connecting' ? 'Connecting…' : 'Connect'} onPress={onConnect} disabled={mode === 'connecting'} />
       </SectionCard>
 
@@ -145,30 +149,34 @@ export function ConnectionScreen({
 
       <SectionCard>
         <Text style={styles.sectionTitle}>Recent events</Text>
-        <Text style={styles.helper}>문제 보고 시 아래 최근 이벤트와 Diagnostics를 함께 전달해 주세요.</Text>
         {recentEvents.length ? recentEvents.map((event, index) => (
           <Text key={`${index}:${event}`} style={styles.eventLine}>• {event}</Text>
-        )) : <Text style={styles.helper}>최근 이벤트가 아직 없습니다.</Text>}
+        )) : <Text style={styles.helper}>No recent events yet.</Text>}
       </SectionCard>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 12, paddingBottom: 24 },
+  container: { gap: 12, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
   header: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'center' },
+  backButton: { padding: 8, borderRadius: 999, backgroundColor: '#f3f4f6' },
   title: { color: colors.text, fontWeight: '700', fontSize: 22 },
   subtitle: { color: colors.textMuted, marginTop: 4, maxWidth: 420 },
   helper: { color: colors.textMuted, marginTop: 8, lineHeight: 18 },
   eventLine: { color: colors.textSoft, marginTop: 8, lineHeight: 18, fontSize: 12 },
   sectionTitle: { color: colors.text, fontWeight: '700', fontSize: 16 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  badge: { color: colors.textSoft, backgroundColor: '#1e293b', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 12 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb' },
+  statusPillConnected: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusLabel: { fontSize: 11, fontWeight: '600', color: colors.textSoft },
+  statusLabelConnected: { color: '#16a34a' },
   info: { color: colors.textSoft, marginTop: 8, lineHeight: 20 },
-  error: { color: '#fca5a5', marginTop: 8 },
+  error: { color: '#dc2626', marginTop: 8 },
   actions: { flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
-  cell: { width: '48%', backgroundColor: colors.panelAlt, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: colors.border },
+  cell: { width: '48%', backgroundColor: '#f9fafb', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#e5e7eb' },
   cellLabel: { color: colors.textMuted, fontSize: 12, marginBottom: 4 },
   cellValue: { color: colors.text, fontWeight: '600' },
 });

@@ -6,5 +6,12 @@
     "build": "npm --prefix app run build && npm --prefix bridge run build",
     "test": "npm --prefix app run test && npm --prefix bridge run test",
     "gate": "npm run lint && npm run build && npm run test"
+  },
+  "dependencies": {
+    "expo": "^55.0.6"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.10",
+    "typescript": "~5.9.2"
   }
 }
