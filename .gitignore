@@ -37,3 +37,6 @@ pnpm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+
+# Nested independent git repos (manage their own history)
+kids-play-app/
